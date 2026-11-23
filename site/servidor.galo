@@ -14,7 +14,7 @@ defina porta como inteiro(variável_ambiente("PORT", variável_ambiente("PORTA",
 defina endereço como variável_ambiente("HOST", "127.0.0.1")
 defina app como criar_app()
 # Compila já os programas do navegador: a primeira visita fica rápida e um erro aparece aqui.
-para cada programa_js em ["/js/inicio.galoc", "/js/experimente.galoc", "/js/painel.galoc"] faça
+para cada programa_js em ["/js/inicio.galoc", "/js/experimente.galoc", "/js/painel.galoc", "/js/basico.galoc"] faça
     afirmar(app.testar("GET", programa_js).status == 200, "o programa {programa_js} não compilou (veja o erro acima)")
 fim
 mostre "🐓 Site da GALO no ar: http://localhost:{porta}"

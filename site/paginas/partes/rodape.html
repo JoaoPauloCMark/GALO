@@ -1,11 +1,12 @@
 <footer class="rodape">
   <div class="conteiner rodape-linha">
-    <a class="marca" href="/"><img src="/estatico/galo.svg" alt="" width="28" height="28"><span>GALO</span></a>
+    <a class="marca" href="{{ base }}/"><img src="{{ base }}/estatico/galo.svg" alt="" width="28" height="28"><span>GALO</span></a>
     <p>Feito com 🐓 em GALO: servidor, páginas, gráficos e interface. Código aberto (MIT).</p>
     <p>GALO {{ versao }}</p>
   </div>
 </footer>
-<script src="/_galo/galo.js"></script>
+{% se estatico %}<script src="{{ base }}/estatico/compilador.js"></script>{% fim %}
+<script src="{{ base }}/_galo/galo.js"></script>
 <script type="application/galo" src="{{ script }}"></script>
 </body>
 </html>

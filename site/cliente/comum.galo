@@ -42,6 +42,12 @@ função apagar_estatísticas()
     fim
 fim
 
+# Prefixo dos endereços do site ("" no servidor GALO, "/GALO" no GitHub Pages).
+função endereço_base() retorna texto
+    defina base como elemento("body").atributo("data-base")
+    retorne se base == nulo então "" senão base
+fim
+
 # Menu do celular: o botão ☰ abre e fecha a navegação.
 função ativar_menu()
     defina botão como elemento("#menu-botao")
@@ -60,7 +66,7 @@ fim
 #   {fase: "compilação", erros, avisos}               o programa tem erros de compilação
 #   {fase: "execução", saída, erro, tempo, avisos}    executou (erro é nulo ou um mapa)
 função rodar_código(código como texto, origem como texto, entradas como lista, ao_terminar)
-    buscar("/api/compilar", {"método": "POST", "json": {"código": código, "origem": origem}}, função(r)
+    buscar(endereço_base() + "/api/compilar", {"método": "POST", "json": {"código": código, "origem": origem}}, função(r)
         se r.json == nulo então
             ao_terminar({"fase": "rede", "mensagem": "Não foi possível falar com o servidor GALO. Ele está rodando?"})
             retorne

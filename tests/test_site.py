@@ -6,15 +6,20 @@
   calculadora), "Experimente" (execução, erros, laço infinito interrompido, leia, compartilhar)
   e painel. No Chrome e no Edge (protocolo DevTools) e no WebKit, o motor do Safari (eventos
   nativos do GTK).
+* A versão estática (GitHub Pages, gerada por site/publicar.sh): os mesmos fluxos, com o
+  compilador rodando no navegador (Pyodide, baixado da internet; GALO_SEM_REDE=1 pula).
 """
 
 import base64
+import functools
+import http.server
 import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 
@@ -177,8 +182,13 @@ class _SiteNoNavegador:
         self.servidor.parar()
         self._tmp.cleanup()
 
+    LIMITE_EXECUCAO = 20
+
     def abrir(self, caminho):
-        self.nav.abrir(self.url + caminho)
+        self.abrir_endereco(self.url + caminho)
+
+    def abrir_endereco(self, endereco):
+        self.nav.abrir(endereco)
         self.nav.esperar("document.body.dataset.pronto === 'sim'", 20, "o programa GALO da página")
 
     def texto(self, seletor):
@@ -197,9 +207,11 @@ class _SiteNoNavegador:
         self.nav.avaliar("(() => { const a = document.querySelector('#codigo'); a.focus(); a.select(); })()")
         self.nav.chamar("Input.insertText", {"text": codigo})
 
-    def esperar_execucao(self, limite=20):
-        return self.nav.esperar("(() => { const s = document.querySelector('#status').textContent;"
-                                " return !s.includes('compilando') && s !== 'pronto' && s; })()", limite, "fim da execução")
+    def esperar_execucao(self, limite=None):
+        limite = max(limite or 0, self.LIMITE_EXECUCAO)
+        return self.nav.esperar("(() => { const s = document.querySelector('#status');"
+                                " return !s.classList.contains('rodando') && s.textContent !== 'pronto' && s.textContent; })()",
+                                limite, "fim da execução")
 
     def test_pagina_inicial(self):
         self.abrir("/")
@@ -209,13 +221,13 @@ class _SiteNoNavegador:
         # exemplo com leia(): a entrada configurada no exemplo é usada
         nav.clicar(".exemplo.ativa .executar-exemplo")
         saida = nav.esperar("(() => { const t = document.querySelector('.exemplo.ativa .console-saida').textContent;"
-                            " return t.includes('Ana') && t; })()", 20, "saída do exemplo")
+                            " return t.includes('Ana') && t; })()", self.LIMITE_EXECUCAO, "saída do exemplo")
         self.assertIn("Olá, Ana! Bem-vindo(a) à GALO 🐓", saida)
         # trocar de aba e ver um erro de execução explicado
         nav.clicar(".aba[data-id=erro]")
         self.assertEqual(nav.avaliar("document.querySelector('.exemplo.ativa').dataset.id"), "erro")
         nav.clicar(".exemplo.ativa .executar-exemplo")
-        erro = nav.esperar("document.querySelector('.exemplo.ativa .erros').textContent", 20, "erro do exemplo")
+        erro = nav.esperar("document.querySelector('.exemplo.ativa .erros').textContent", self.LIMITE_EXECUCAO, "erro do exemplo")
         self.assertIn("G304", erro)
         self.assertIn("linha 4", erro)
         # calculadora: cliques e teclado
@@ -271,10 +283,10 @@ class _SiteNoNavegador:
         # compartilhar: o programa vai dentro do link (nada é guardado no servidor)
         nav.clicar("#botao-compartilhar")
         link = nav.esperar("document.querySelector('#link').value", 10, "o link")
-        self.assertRegex(link, r"/experimente#codigo=[A-Za-z0-9_-]+$")
+        self.assertRegex(link, r"/experimente/?#codigo=[A-Za-z0-9_-]+$")
         self.trocar_codigo("mostre 1\n")   # mudou depois de compartilhar: o link continua com o programa antigo
         nav.abrir("about:blank")
-        self.abrir(link.split(str(self.servidor.porta), 1)[1])
+        self.abrir_endereco(link)
         self.assertEqual(nav.avaliar("document.querySelector('#codigo').value"),
                          'defina n como leia("Número: ")\nmostre "dobro:", inteiro(n) * 2\n')
         self.assertTrue(nav.avaliar("!document.querySelector('#aviso-link').hidden"))
@@ -329,6 +341,96 @@ class TestSiteNoEdge(_SiteNoNavegador, unittest.TestCase):
     EXECUTAVEL = EDGE
 
 
+class _ServidorDeArquivos:
+    """Serve uma pasta como o GitHub Pages: só arquivos, nenhum código no servidor."""
+
+    def __init__(self, pasta):
+        class Silencioso(http.server.SimpleHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+
+        self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Silencioso, directory=pasta))
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        self.porta = self.httpd.server_address[1]
+
+    def parar(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+def gerar_site_estatico(pasta, base="/GALO"):
+    destino = os.path.join(pasta, base.strip("/"))
+    r = subprocess.run(["sh", os.path.join(SITE, "publicar.sh")], capture_output=True, text=True, timeout=180,
+                       env=dict(os.environ, DESTINO=destino, BASE=base, PYTHON=sys.executable))
+    assert r.returncode == 0, r.stdout + r.stderr
+    return destino
+
+
+class TestGeracaoDoSiteEstatico(unittest.TestCase):
+    def test_publicar(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            destino = gerar_site_estatico(pasta)
+            arquivos = {os.path.relpath(os.path.join(r, a), destino) for r, _, aa in os.walk(destino) for a in aa}
+            for esperado in ("index.html", "experimente/index.html", "painel/index.html", "404.html", ".nojekyll",
+                             "js/inicio.galoc", "js/experimente.galoc", "js/painel.galoc", "js/basico.galoc",
+                             "_galo/galo.js", "_galo/compilador.zip", "estatico/estilo.css", "estatico/compilador.js"):
+                self.assertIn(esperado, arquivos)
+            with open(os.path.join(destino, "index.html"), encoding="utf-8") as f:
+                inicio = f.read()
+            self.assertIn('href="/GALO/experimente"', inicio)
+            self.assertIn('src="/GALO/estatico/compilador.js"', inicio)
+            self.assertNotIn('href="/experimente"', inicio)
+            import zipfile
+            with zipfile.ZipFile(os.path.join(destino, "_galo", "compilador.zip")) as z:
+                nomes = z.namelist()
+            self.assertIn("galo/web/navegador.py", nomes)
+            self.assertFalse([n for n in nomes if not n.endswith(".py")])
+
+    def test_compilar_json_e_o_mesmo_do_servidor(self):
+        from galo.web.navegador import compilar_json
+        status, corpo = compilar_json(json.dumps({"código": "mostre nmoe"}))
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(corpo)["erros"][0]["código"], "G201")
+        self.assertEqual(compilar_json("{}")[0], 400)
+        self.assertEqual(compilar_json(json.dumps({"código": "#" * 20001}))[0], 413)
+
+
+class _SiteEstatico:
+    """A versão para o GitHub Pages, servida em /GALO/ como lá, sem nenhum servidor GALO."""
+
+    LIMITE_EXECUCAO = 90  # a primeira compilação baixa o Pyodide
+
+    @classmethod
+    def setUpClass(cls):
+        if os.environ.get("GALO_SEM_REDE"):
+            raise unittest.SkipTest("o site estático baixa o Pyodide da internet")
+        cls._tmp_estatico = tempfile.TemporaryDirectory()
+        gerar_site_estatico(cls._tmp_estatico.name)
+        cls.arquivos = _ServidorDeArquivos(cls._tmp_estatico.name)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.arquivos.parar()
+        cls._tmp_estatico.cleanup()
+
+    def setUp(self):
+        self.servidor = type("SemServidor", (), {"parar": lambda s: None})()
+        self._tmp = tempfile.TemporaryDirectory()
+        self.url = f"http://127.0.0.1:{self.arquivos.porta}/GALO"
+        self.nav = Chrome(1280, 900, executavel=self.EXECUTAVEL)
+        self.nav.chamar("Runtime.enable")
+
+    def test_pagina_404(self):
+        self.abrir("/404.html")
+        self.assertIn("não achei", self.texto("h1"))
+        self.assertEqual(self.nav.avaliar("document.querySelector('.marca').getAttribute('href')"), "/GALO/")
+
+
+@unittest.skipUnless(CHROME, "Chrome/Chromium não está instalado")
+class TestSiteEstaticoNoChrome(_SiteEstatico, _SiteNoNavegador, unittest.TestCase):
+    EXECUTAVEL = CHROME
+
+
 @unittest.skipUnless(WEBKIT, "WebKitGTK (motor do Safari) não está instalado")
 class TestSiteNoWebKit(unittest.TestCase):
     """O mesmo site no motor do Safari, com cliques e teclas nativos."""
@@ -366,6 +468,29 @@ class TestSiteNoWebKit(unittest.TestCase):
         self.assertIn("Olá, mundo! 🐓", experimente["valores"]["saida"])
         self.assertIn("G330", experimente["valores"]["erros"])
 
+
+    @unittest.skipIf(os.environ.get("GALO_SEM_REDE"), "o site estático baixa o Pyodide da internet")
+    def test_site_estatico(self):
+        """A versão do GitHub Pages no motor do Safari: compilador no navegador (Pyodide)."""
+        with tempfile.TemporaryDirectory() as pasta:
+            gerar_site_estatico(pasta)
+            arquivos = _ServidorDeArquivos(pasta)
+            status = "document.querySelector('#status')"
+            try:
+                dados = rodar_webkit(f"http://127.0.0.1:{arquivos.porta}/GALO/experimente/", [
+                    {"esperar": "document.body.dataset.pronto === 'sim'", "limite": 30, "descricao": "o programa GALO"},
+                    {"clicar": "#botao-executar"},
+                    {"esperar": f"{status}.textContent.includes('executado')", "limite": 150, "descricao": "compilar e executar"},
+                    {"avaliar": "document.querySelector('#saida').textContent", "nome": "saida"},
+                    {"avaliar": "(() => { const a = document.querySelector('#codigo'); a.value = 'mostre nmoe'; a.dispatchEvent(new Event('input')); })()"},
+                    {"clicar": "#botao-executar"},
+                    {"esperar": f"{status}.classList.contains('erro')", "limite": 30, "descricao": "o erro de compilação"},
+                    {"avaliar": "document.querySelector('#erros').textContent", "nome": "erros"},
+                ], limite=280)
+            finally:
+                arquivos.parar()
+        self.assertIn("Olá, mundo! 🐓", dados["valores"]["saida"])
+        self.assertIn("G201", dados["valores"]["erros"])
 
 if __name__ == "__main__":
     unittest.main()

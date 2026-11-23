@@ -1,0 +1,5 @@
+# Páginas simples (como a de endereço inexistente): só o menu do celular.
+importe "comum.galo" como comum
+
+comum.ativar_menu()
+elemento("body").definir_atributo("data-pronto", "sim")

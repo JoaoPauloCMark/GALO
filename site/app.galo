@@ -6,6 +6,10 @@
 #
 # O servidor não guarda nada: não há banco de dados. Links compartilhados levam o programa no
 # próprio endereço, e os "Seus números" do painel ficam no navegador de cada pessoa.
+#
+# criar_app(base, estatico): `base` é o prefixo dos endereços ("/GALO" no GitHub Pages);
+# com estatico = verdadeiro, as páginas carregam o compilador que roda no navegador
+# (site/gerar_estatico.galo gera a versão estática a partir destas mesmas rotas).
 
 importe carregar_exemplos de "exemplos.galo"
 importe realçar, PALAVRAS_CHAVE, LITERAIS de "compartilhado/realce.galo"
@@ -135,7 +139,7 @@ função _código_do_pedido(pedido)
     retorne corpo.código
 fim
 
-função criar_app()
+função criar_app(base como texto = "", estatico como booleano = falso)
     defina exemplos como carregar_exemplos("exemplos")
     defina por_id como {}
     para cada ex em exemplos faça
@@ -144,13 +148,16 @@ função criar_app()
     defina vitrine como preparar_vitrine()
     defina erro como erro_de_exemplo()
     defina números como contar_números()
+    defina exemplos_json como para_json(mapear(exemplos, função(ex)
+        retorne {"id": ex.id, "titulo": ex.titulo, "codigo": ex.codigo, "entradas": ex.entradas}
+    fim))
     defina app como criar_servidor()
 
     # Dados que todas as páginas usam (cabeçalho e rodapé).
     função página(título como texto, descrição como texto, script como texto, extras como mapa) retorna mapa
         defina d como {
-            "titulo": título, "descricao": descrição, "script": script, "versao": VERSÃO,
-            "ativo_experimente": "", "ativo_painel": ""
+            "titulo": título, "descricao": descrição, "script": base + script, "versao": VERSÃO,
+            "base": base, "estatico": estatico, "ativo_experimente": "", "ativo_painel": ""
         }
         para cada chave, valor em extras faça
             d[chave] = valor
@@ -161,7 +168,7 @@ função criar_app()
     função tela_experimente(código_inicial como texto, extras como mapa)
         defina d como página("Experimente — GALO", "Escreva e execute programas GALO direto no navegador.",
             "/js/experimente.galoc", {
-                "ativo_experimente": "ativo", "exemplos": exemplos, "codigo_inicial": código_inicial,
+                "ativo_experimente": "ativo", "exemplos": exemplos, "exemplos_json": exemplos_json, "codigo_inicial": código_inicial,
                 "entradas_iniciais": "", "restaurar": "nao"
             })
         para cada chave, valor em extras faça
@@ -200,6 +207,13 @@ função criar_app()
             "/js/painel.galoc", {"ativo_painel": "ativo"}))
     fim)
 
+    # Página de endereço inexistente (no GitHub Pages ela vira o 404.html).
+    app.get("/nao-encontrado", função(pedido)
+        retorne resposta_html(renderizar("paginas/nao_encontrado.html", página("Página não encontrada — GALO",
+            "Página não encontrada.", "/js/basico.galoc",
+            {"mensagem": "Esta página não existe. Que tal escrever um programa no Experimente?"})), 404)
+    fim)
+
     # ------------------------------------------------------------------ API
 
     app.get("/api/exemplos", função(pedido)
@@ -224,5 +238,6 @@ função criar_app()
     app.cliente("/js/inicio.galoc", "cliente/inicio.galo")
     app.cliente("/js/experimente.galoc", "cliente/experimente.galo")
     app.cliente("/js/painel.galoc", "cliente/painel.galo")
+    app.cliente("/js/basico.galoc", "cliente/basico.galo")
     retorne app
 fim

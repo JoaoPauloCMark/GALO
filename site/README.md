@@ -5,9 +5,12 @@ O site oficial da GALO: página de apresentação, exemplos executáveis, uma ca
 banco de dados, páginas, realce de sintaxe, calculadora, gráficos e interface são programas
 GALO** — só o HTML dos modelos, o CSS e as imagens não são.
 
+**No ar:** https://joaopaulocmark.github.io/GALO/ — publicado pelo GitHub Pages a cada push no `main`.
+
 ```bash
 galo executar site/servidor.galo        # abra http://localhost:8080
-galo executar site/testes.galo          # testes do site, sem rede (banco em memória)
+galo executar site/testes.galo          # testes do site, sem rede
+sh site/publicar.sh                     # gera a versão estática em _site/
 ```
 
 **Sem banco de dados:** o servidor não guarda nada. Links compartilhados levam o programa no
@@ -58,6 +61,8 @@ O código de quem visita o site **nunca é executado no servidor**.
 | `paginas/*.html` | modelos HTML (`partes/` tem o cabeçalho e o rodapé) |
 | `publico/` | CSS, mascote e ícone |
 | `Dockerfile` | imagem para publicar o site |
+| `gerar_estatico.galo`, `publicar.sh` | geram a versão estática (GitHub Pages) a partir das mesmas rotas |
+| `publico/compilador.js` | no site estático, roda o compilador da GALO no navegador (Pyodide) |
 | `testes.galo` | 72 verificações: módulos compartilhados, páginas, API, compartilhamento, segurança |
 
 Os módulos de `compartilhado/` rodam nas duas máquinas virtuais com o mesmo resultado: o programa
@@ -66,7 +71,25 @@ O fluxo completo do site (cliques e teclas reais) é testado em `tests/test_site
 
 ## Publicando na web
 
-O site precisa só de Python 3.10+ (sem dependências) e não grava nada em disco, então funciona em
+### GitHub Pages (grátis, é o que está no ar)
+
+O workflow [`.github/workflows/site.yml`](../.github/workflows/site.yml) roda a cada push no
+`main`: executa `site/testes.galo`, gera a versão estática com `site/publicar.sh` e publica.
+
+Na versão estática não há servidor: as páginas são HTML gerado pelas mesmas rotas do
+`app.galo` (por `gerar_estatico.galo`), e o “Experimente” compila no navegador — o compilador da
+GALO, em Python, roda no [Pyodide](https://pyodide.org) (Python em WebAssembly), carregado por
+`publico/compilador.js`. Na primeira compilação o navegador baixa o Pyodide (alguns segundos);
+depois fica em cache. Os programas continuam executando isolados num Web Worker.
+
+Para ativar num repositório novo: **Settings → Pages → Build and deployment → Source: GitHub
+Actions**. O endereço fica `https://<usuário>.github.io/<repositório>/`; o prefixo dos links vem
+sozinho do GitHub (`BASE`), inclusive se você configurar um domínio próprio.
+
+### Com servidor GALO
+
+O site também roda como servidor (compilando no servidor), por exemplo num contêiner.
+Ele precisa só de Python 3.10+ (sem dependências) e não grava nada em disco, então funciona em
 qualquer hospedagem que rode um processo Python ou um contêiner (Render, Railway, Fly.io, uma VPS...).
 
 **Com contêiner** — na raiz do projeto:

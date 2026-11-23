@@ -128,7 +128,7 @@ função desenhar_estatísticas(st)
     defina horas como mapear(st.por_hora, função(h) retorne h.hora fim)
     defina quantidades como mapear(st.por_hora, função(h) retorne h.quantidade fim)
     se soma(quantidades) == 0 então
-        elemento("#grafico-horas").html = "<p class=\"vazio\">Você ainda não executou nada nas últimas 24 horas. <a href=\"/experimente\">Que tal agora?</a></p>"
+        elemento("#grafico-horas").html = "<p class=\"vazio\">Você ainda não executou nada nas últimas 24 horas. <a href=\"" + comum.endereço_base() + "/experimente\">Que tal agora?</a></p>"
     senão
         defina rótulos como mapear(intervalo(1, tamanho(horas)), função(i)
             retorne se i % 3 == 0 ou i == tamanho(horas) então horas[i] + "h" senão ""

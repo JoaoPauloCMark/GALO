@@ -6,3 +6,4 @@ build/
 *.egg-info/
 vscode-extension/*.vsix
 *.db
+_site/

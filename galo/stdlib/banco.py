@@ -12,7 +12,11 @@ texto do SQL: isso impede ataques de injeção de SQL.
 from __future__ import annotations
 
 import re
-import sqlite3
+
+try:
+    import sqlite3
+except ImportError:  # Python sem SQLite (por exemplo, o Pyodide, no navegador): só abrir_banco() fica indisponível
+    sqlite3 = None
 
 from ..runtime.values import GaloMapa, GaloObjetoNativo, article, type_name
 from ._util import erro, exige_funcao, exige_texto
@@ -73,6 +77,8 @@ def _linha(cursor, row) -> GaloMapa:
 
 class _Banco:
     def __init__(self, caminho: str, exibido: str) -> None:
+        if sqlite3 is None:
+            raise erro("G324", "O banco de dados SQLite não está disponível nesta instalação do Python.")
         try:
             self.conn = sqlite3.connect(caminho, isolation_level=None, check_same_thread=False)
             self.conn.execute("PRAGMA foreign_keys = ON")

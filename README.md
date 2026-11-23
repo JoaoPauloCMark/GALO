@@ -9,7 +9,8 @@ Com a biblioteca padrão dá para construir **sistemas full stack inteiros em GA
 rotas e JSON, banco de dados SQL, páginas HTML geradas no servidor e interfaces interativas que rodam
 no navegador. Veja o [guia full stack](docs/full-stack.md) e o exemplo [`examples/tarefas`](examples/tarefas).
 
-O **site da linguagem** é a prova: [`site/`](site/) é escrito inteiramente em GALO — apresentação,
+O **site da linguagem** é a prova — no ar em **https://joaopaulocmark.github.io/GALO/** —
+e [`site/`](site/) é escrito inteiramente em GALO — apresentação,
 exemplos executáveis, calculadora, painel ao vivo com gráficos e um “Experimente” em que o servidor
 compila e o navegador executa o programa de quem visita (`galo executar site/servidor.galo` e abra
 http://localhost:8080).

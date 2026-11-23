@@ -36,8 +36,10 @@ função código_do_endereço(endereço como texto)
     retorne decodificar_link(fatia(endereço, i + tamanho(PREFIXO)))
 fim
 
-# O link que abre `código` no Experimente, no mesmo site de `endereço_atual`.
+# O link que abre `código` no Experimente. `endereço_atual` é o da própria página do
+# Experimente; a consulta (?...) e o fragmento (#...) dela são trocados pelo programa.
 função endereço_do_programa(endereço_atual como texto, código como texto) retorna texto
-    defina partes como dividir(endereço_atual, "/")   # ["https:", "", "exemplo.com", ...]
-    retorne partes[1] + "//" + partes[3] + "/experimente" + PREFIXO + codificar_link(código)
+    defina sem_fragmento como dividir(endereço_atual, "#")[1]
+    defina sem_consulta como dividir(sem_fragmento, "?")[1]
+    retorne sem_consulta + PREFIXO + codificar_link(código)
 fim

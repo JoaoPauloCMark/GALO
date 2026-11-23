@@ -9,7 +9,7 @@
       </div>
       <div class="exp-acoes">
         <label class="seletor"><span>Exemplo</span>
-          <select id="seletor-exemplo">
+          <select id="seletor-exemplo" data-exemplos="{{ exemplos_json }}">
             <option value="">Escolha…</option>
             {% para cada ex em exemplos %}<option value="{{ ex.id }}">{{ ex.emoji }} {{ ex.titulo }}</option>
             {% fim %}

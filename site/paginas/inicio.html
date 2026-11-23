@@ -11,13 +11,13 @@
           erro que explicam o que fazer. Do primeiro “Olá, mundo” a um sistema web completo.
         </p>
         <div class="hero-acoes entrar entrar-4">
-          <a class="botao" href="/experimente">Experimente no navegador →</a>
+          <a class="botao" href="{{ base }}/experimente">Experimente no navegador →</a>
           <a class="botao botao-fantasma" href="#exemplos">Ver exemplos</a>
         </div>
         <p class="hero-nota entrar entrar-4">Este site inteiro — servidor, páginas e interface — foi escrito em GALO.</p>
       </div>
       <div class="hero-visual entrar entrar-3">
-        <img class="mascote" src="/estatico/galo.svg" alt="O galo, mascote da linguagem GALO" width="150" height="150">
+        <img class="mascote" src="{{ base }}/estatico/galo.svg" alt="O galo, mascote da linguagem GALO" width="150" height="150">
         <div class="janela-codigo vitrine" id="vitrine" data-programas="{{ vitrine_json }}">
           <div class="janela-barra">
             <span class="bolinha vermelha"></span><span class="bolinha amarela"></span><span class="bolinha verde"></span>
@@ -146,7 +146,7 @@
             <textarea class="entradas-exemplo" hidden>{{ ex.entradas_texto }}</textarea>
             <div class="acoes">
               <button class="botao executar-exemplo" type="button">▶ Executar</button>
-              <a class="botao botao-fantasma" href="/experimente?exemplo={{ ex.id }}">Abrir no Experimente →</a>
+              <a class="botao botao-fantasma" href="{{ base }}/experimente?exemplo={{ ex.id }}">Abrir no Experimente →</a>
             </div>
             <div class="console" hidden>
               <div class="console-topo"><span>saída</span><span class="status">pronto</span></div>
@@ -212,7 +212,7 @@
             <div class="kpi"><div class="kpi-rotulo">😊 Satisfação</div><div class="kpi-valor" id="mini-satisfacao">–</div></div>
           </div>
           <div class="mini-grafico" id="mini-grafico"></div>
-          <div class="rodape-cartao"><span id="mini-hora">Hora na cafeteria: –</span><a href="/painel">Abrir o painel completo →</a></div>
+          <div class="rodape-cartao"><span id="mini-hora">Hora na cafeteria: –</span><a href="{{ base }}/painel">Abrir o painel completo →</a></div>
         </div>
       </div>
     </div>
@@ -251,7 +251,7 @@
           <h2>{{ numeros.linhas_site }} linhas de GALO, {{ numeros.arquivos_site }} arquivos</h2>
           <p>O servidor web, o banco de dados, as páginas, o realce de sintaxe, a calculadora, os gráficos
              e o “Experimente” são programas GALO. Leia o código na pasta <code>site/</code> do projeto.</p>
-          <a class="botao" href="/experimente">Escreva o seu →</a>
+          <a class="botao" href="{{ base }}/experimente">Escreva o seu →</a>
         </div>
         <ul class="arquivos-site">
           {% para cada arq em arquivos_site %}<li><span>{{ arq.nome }}</span><span>{{ arq.linhas }} linhas</span></li>

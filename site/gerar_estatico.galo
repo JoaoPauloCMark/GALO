@@ -1,0 +1,26 @@
+programa "Gerador do site estático"
+# Gera as páginas do site como arquivos HTML, para hospedagem estática (GitHub Pages).
+# As páginas saem das mesmas rotas do servidor (app.testar() faz os pedidos sem rede).
+#
+# Use pelo site/publicar.sh, que também copia os arquivos e compila os programas do navegador.
+# Variáveis de ambiente: DESTINO (pasta de saída) e BASE (prefixo dos endereços, ex.: /GALO).
+
+importe criar_app de "app.galo"
+
+defina destino como variável_ambiente("DESTINO", "../_site")
+defina base como variável_ambiente("BASE", "")
+defina app como criar_app(base: base, estatico: verdadeiro)
+
+defina páginas como [
+    ["/", "index.html", 200],
+    ["/experimente", "experimente/index.html", 200],
+    ["/painel", "painel/index.html", 200],
+    ["/nao-encontrado", "404.html", 404]
+]
+
+para cada página em páginas faça
+    defina resposta como app.testar("GET", página[1])
+    afirmar(resposta.status == página[3], "a página {página[1]} respondeu {resposta.status}")
+    escrever_arquivo(destino + "/" + página[2], resposta.corpo)
+    mostre "  {página[2]}"
+fim

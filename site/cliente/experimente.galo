@@ -20,6 +20,7 @@ defina erros como elemento("#erros")
 defina situação como elemento("#status")
 defina botão_executar como elemento("#botao-executar")
 defina caixa_entradas como elemento("#entradas")
+defina EXEMPLOS como de_json(elemento("#seletor-exemplo").atributo("data-exemplos"))
 defina rodando como falso
 
 função quantas_linhas(código como texto) retorna inteiro
@@ -115,27 +116,36 @@ fim)
 
 botão_executar.ao("clique", executar)
 
-elemento("#seletor-exemplo").ao("mudança", função(evento)
-    defina id como evento.valor
-    se id == "" então
-        retorne
+função carregar_exemplo(id como texto) retorna booleano
+    para cada ex em EXEMPLOS faça
+        se ex.id == id então
+            campo.valor = ex.codigo
+            caixa_entradas.valor = juntar(ex.entradas, "\n")
+            atualizar_editor()
+            salvar()
+            saída.texto = "Exemplo “{ex.titulo}” carregado. Clique em ▶ Executar."
+            erros.html = ""
+            retorne verdadeiro
+        fim
     fim
-    buscar("/api/exemplos", nulo, função(r)
-        se não r.ok então
-            retorne
-        fim
-        para cada ex em r.json faça
-            se ex.id == id então
-                campo.valor = ex.codigo
-                caixa_entradas.valor = juntar(ex.entradas, "\n")
-                atualizar_editor()
-                salvar()
-                saída.texto = "Exemplo “{ex.titulo}” carregado. Clique em ▶ Executar."
-                erros.html = ""
-            fim
-        fim
-    fim)
+    retorne falso
+fim
+
+elemento("#seletor-exemplo").ao("mudança", função(evento)
+    se evento.valor != "" então
+        carregar_exemplo(evento.valor)
+    fim
 fim)
+
+# ?exemplo=tabuada abre um exemplo (no site estático, quem resolve isso é esta página).
+defina consulta como dividir(dividir(endereço_atual(), "#")[1], "?")
+se tamanho(consulta) > 1 e do_link == nulo então
+    para cada parte em dividir(consulta[2], "&") faça
+        se começa_com(parte, "exemplo=") então
+            carregar_exemplo(decodificar_url(fatia(parte, 9)))
+        fim
+    fim
+fim
 
 # Compartilhar: o programa vai dentro do próprio link (depois do #); nada fica no servidor.
 elemento("#botao-compartilhar").ao("clique", função()
