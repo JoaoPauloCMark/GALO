@@ -1,0 +1,14 @@
+# título: Pim, Pam, PimPam
+# emoji: 🥁
+# descrição: O clássico FizzBuzz em versão brasileira: múltiplos de 3 fazem Pim, de 5 fazem Pam e de ambos, PimPam!
+para n de 1 até 20 faça
+    se n % 15 == 0 então
+        mostre "PimPam! 🎉"
+    senão se n % 3 == 0 então
+        mostre "Pim"
+    senão se n % 5 == 0 então
+        mostre "Pam"
+    senão
+        mostre n
+    fim
+fim

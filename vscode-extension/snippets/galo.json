@@ -1,0 +1,220 @@
+{
+  "Programa": {
+    "prefix": "programa",
+    "body": [
+      "programa \"${1:Nome do programa}\"",
+      "",
+      "$0"
+    ],
+    "description": "Cabeçalho de um programa GALO"
+  },
+  "Defina": {
+    "prefix": "defina",
+    "body": [
+      "defina ${1:nome} como ${2:valor}"
+    ],
+    "description": "Declara uma variável"
+  },
+  "Constante": {
+    "prefix": "constante",
+    "body": [
+      "constante ${1:NOME} como ${2:valor}"
+    ],
+    "description": "Declara uma constante"
+  },
+  "Mostre": {
+    "prefix": "mostre",
+    "body": [
+      "mostre \"${1:texto} {${2:valor}}\""
+    ],
+    "description": "Mostra um texto com interpolação"
+  },
+  "Se": {
+    "prefix": "se",
+    "body": [
+      "se ${1:condição} então",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Condicional"
+  },
+  "Se senão": {
+    "prefix": "sesenao",
+    "body": [
+      "se ${1:condição} então",
+      "\t$2",
+      "senão",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Condicional com senão"
+  },
+  "Se senão se": {
+    "prefix": "senaose",
+    "body": [
+      "se ${1:condição} então",
+      "\t$2",
+      "senão se ${3:outra condição} então",
+      "\t$4",
+      "senão",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Condicional com várias alternativas"
+  },
+  "Enquanto": {
+    "prefix": "enquanto",
+    "body": [
+      "enquanto ${1:condição} faça",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Laço enquanto a condição for verdadeira"
+  },
+  "Para": {
+    "prefix": "para",
+    "body": [
+      "para ${1:i} de ${2:1} até ${3:10} faça",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Laço numérico"
+  },
+  "Para com passo": {
+    "prefix": "parapasso",
+    "body": [
+      "para ${1:i} de ${2:0} até ${3:100} passo ${4:10} faça",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Laço numérico com passo"
+  },
+  "Para cada": {
+    "prefix": "paracada",
+    "body": [
+      "para cada ${1:item} em ${2:lista} faça",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Percorre uma lista, texto ou mapa"
+  },
+  "Para cada chave e valor": {
+    "prefix": "paracadachave",
+    "body": [
+      "para cada ${1:chave}, ${2:valor} em ${3:mapa} faça",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Percorre chaves e valores de um mapa"
+  },
+  "Repita": {
+    "prefix": "repita",
+    "body": [
+      "repita ${1:3} vezes",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Repete um número fixo de vezes"
+  },
+  "Função": {
+    "prefix": "funcao",
+    "body": [
+      "função ${1:nome}(${2:parâmetro})",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Define uma função"
+  },
+  "Função tipada": {
+    "prefix": "funcaotipada",
+    "body": [
+      "função ${1:nome}(${2:a} como ${3:número}) retorna ${4:número}",
+      "\t$0",
+      "fim"
+    ],
+    "description": "Define uma função com tipos"
+  },
+  "Função anônima": {
+    "prefix": "lambda",
+    "body": [
+      "função(${1:x}) retorne ${2:x * 2} fim"
+    ],
+    "description": "Função sem nome em uma linha"
+  },
+  "Tente capture": {
+    "prefix": "tente",
+    "body": [
+      "tente",
+      "\t$1",
+      "capture ${2:erro}",
+      "\tmostre \"Erro: {${2:erro}.mensagem}\"",
+      "fim"
+    ],
+    "description": "Tratamento de erros"
+  },
+  "Registro": {
+    "prefix": "registro",
+    "body": [
+      "registro ${1:Nome}",
+      "\t${2:campo} como ${3:texto}",
+      "",
+      "\tfunção ${4:método}()",
+      "\t\t$0",
+      "\tfim",
+      "fim"
+    ],
+    "description": "Tipo com campos e métodos"
+  },
+  "Registro simples": {
+    "prefix": "registrocurto",
+    "body": [
+      "registro ${1:Ponto}(${2:x} como ${3:número}, ${4:y} como ${5:número})"
+    ],
+    "description": "Registro em uma linha"
+  },
+  "Importe": {
+    "prefix": "importe",
+    "body": [
+      "importe \"${1:arquivo}.galo\" como ${2:nome}"
+    ],
+    "description": "Importa um módulo"
+  },
+  "Importe nomes": {
+    "prefix": "importenomes",
+    "body": [
+      "importe ${1:nome} de \"${2:arquivo}.galo\""
+    ],
+    "description": "Importa nomes de um módulo"
+  },
+  "Servidor web": {
+    "prefix": "servidor",
+    "body": [
+      "defina app como criar_servidor()",
+      "",
+      "app.get(\"/\", função(pedido)",
+      "\tretorne \"<h1>${1:Olá}</h1>\"",
+      "fim)",
+      "",
+      "app.iniciar(${2:8000})"
+    ],
+    "description": "Servidor web mínimo"
+  },
+  "Rota": {
+    "prefix": "rota",
+    "body": [
+      "app.${1|get,post,put,patch,delete|}(\"${2:/api/recurso}\", função(pedido)",
+      "\t$0",
+      "fim)"
+    ],
+    "description": "Nova rota HTTP"
+  },
+  "Texto multilinha": {
+    "prefix": "multilinha",
+    "body": [
+      "\"\"\"",
+      "$0",
+      "\"\"\""
+    ],
+    "description": "Texto de várias linhas (com interpolação)"
+  }
+}

@@ -1,0 +1,5 @@
+1011 + 1 = 1100  (8 passos)
+111 + 1 = 1000  (8 passos)
+0 + 1 = 1  (3 passos)
+Castor de 3 estados: fita 111111, 6 uns em 14 passos
+Castor de 4 estados: fita 1_111111111111, 13 uns em 107 passos

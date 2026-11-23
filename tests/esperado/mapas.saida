@@ -1,0 +1,12 @@
+{"nome": "Ana", "idade": 31, "cidade": "Belo Horizonte"}
+Ana tem 31 anos e mora em Belo Horizonte.
+o: 3
+galo: 3
+canta: 1
+e: 2
+voa: 1
+dorme: 1
+Chaves: ["o", "galo", "canta", "e", "voa", "dorme"]
+'galo' aparece? verdadeiro
+Removendo 'e': 2
+Tamanho final: 5

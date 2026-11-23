@@ -1,0 +1,60 @@
+# Carrega os programas da pasta exemplos/. Cada arquivo começa com comentários de metadados:
+#
+#   # título: Tabuada
+#   # emoji: ✖️
+#   # descrição: Um laço "para"...
+#   # entradas: Ana | 42          (opcional: respostas para leia(), separadas por |)
+#
+# O resto do arquivo é o programa. O realce de sintaxe é gerado aqui, uma vez, no servidor.
+
+importe realçar, sem_acentos de "compartilhado/realce.galo"
+
+função _sem_prefixo(arquivo como texto) retorna texto
+    defina nome como substituir(arquivo, ".galo", "")
+    se corresponde(nome, '^\d+-') então
+        retorne substituir_padrão(nome, '^\d+-', "")
+    fim
+    retorne nome
+fim
+
+função ler_exemplo(pasta como texto, arquivo como texto) retorna mapa
+    defina meta como {"titulo": _sem_prefixo(arquivo), "emoji": "🐓", "descricao": "", "entradas": ""}
+    defina linhas_código como []
+    defina no_cabeçalho como verdadeiro
+    para cada linha em ler_linhas(pasta + "/" + arquivo) faça
+        defina achado como procurar_todos(linha, '^#\s*[a-zçãéíóúâêô]+:')
+        se no_cabeçalho e tamanho(achado) > 0 então
+            defina chave como minúsculas(aparar(substituir(substituir(achado[1], "#", ""), ":", "")))
+            meta[sem_acentos(chave)] = aparar(fatia(linha, tamanho(achado[1]) + 1))
+        senão
+            no_cabeçalho = falso
+            adicionar(linhas_código, linha)
+        fim
+    fim
+    defina código como juntar(linhas_código, "\n")
+    defina entradas como []
+    se aparar(meta.entradas) != "" então
+        entradas = mapear(dividir(meta.entradas, "|"), aparar)
+    fim
+    retorne {
+        "id": _sem_prefixo(arquivo),
+        "arquivo": _sem_prefixo(arquivo) + ".galo",
+        "titulo": meta.titulo,
+        "emoji": meta.emoji,
+        "descricao": meta.descricao,
+        "codigo": código,
+        "entradas": entradas,
+        "entradas_texto": juntar(entradas, "\n"),
+        "html": realçar(código),
+        "classe": ""
+    }
+fim
+
+função carregar_exemplos(pasta como texto) retorna lista
+    defina arquivos como ordenar(filtrar(listar_arquivos(pasta), função(a) retorne termina_com(a, ".galo") fim))
+    defina exemplos como mapear(arquivos, função(a) retorne ler_exemplo(pasta, a) fim)
+    se tamanho(exemplos) > 0 então
+        exemplos[1].classe = "ativa"
+    fim
+    retorne exemplos
+fim

@@ -1,0 +1,27 @@
+programa "Fatorial"
+
+# Versão recursiva: a função chama a si mesma até chegar ao caso base.
+função fatorial(n como inteiro) retorna inteiro
+    se n <= 1 então
+        retorne 1
+    fim
+
+    retorne n * fatorial(n - 1)
+fim
+
+# Versão iterativa, com um laço.
+função fatorial_iterativo(n como inteiro) retorna inteiro
+    defina resultado como 1
+    para i de 2 até n faça
+        resultado *= i
+    fim
+    retorne resultado
+fim
+
+para n de 0 até 10 faça
+    mostre "{n}! = {fatorial(n)}"
+fim
+
+# Inteiros em GALO não têm limite de tamanho.
+mostre "50! =", fatorial_iterativo(50)
+mostre "As duas versões concordam:", fatorial(25) == fatorial_iterativo(25)

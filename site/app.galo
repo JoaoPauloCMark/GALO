@@ -1,0 +1,228 @@
+# Rotas do site da GALO: páginas montadas no servidor e a API usada pelo navegador.
+#
+# O "Experimente" funciona assim: o navegador manda o código para /api/compilar, o servidor
+# compila com compilar_programa() (sem executar nada) e devolve o bytecode; o navegador executa
+# com executar_programa(), isolado num Web Worker. O código de quem visita nunca roda aqui.
+#
+# O servidor não guarda nada: não há banco de dados. Links compartilhados levam o programa no
+# próprio endereço, e os "Seus números" do painel ficam no navegador de cada pessoa.
+
+importe carregar_exemplos de "exemplos.galo"
+importe realçar, PALAVRAS_CHAVE, LITERAIS de "compartilhado/realce.galo"
+
+constante VERSÃO como "0.2"
+constante LIMITE_CÓDIGO como 20000
+
+constante PROGRAMA_INICIAL como '''# Bem-vindo(a) ao Experimente! Edite e clique em ▶ Executar.
+
+função saudar(nome como texto, emoji = "🐓")
+    retorne "Olá, {nome}! {emoji}"
+fim
+
+mostre saudar("mundo")
+mostre saudar("GALO", emoji: "🚀")
+
+defina frutas como ["caju", "açaí", "pitanga", "jabuticaba"]
+para cada i, fruta em frutas faça
+    mostre "{i}. {maiúsculas(fruta)} tem {tamanho(fruta)} letras"
+fim
+
+defina maiores como filtrar(frutas, função(f) retorne tamanho(f) > 4 fim)
+mostre "Frutas com mais de 4 letras:", juntar(maiores, " e ")
+mostre "2 ^ 64 =", 2 ^ 64
+'''
+
+# Programas "digitados" na janela da página inicial. São compilados uma vez, ao iniciar, e o
+# bytecode vai junto com a página: o navegador só executa.
+constante VITRINE como [
+    {"arquivo": "ola.galo", "saida": "Olá, mundo! 🐓", "codigo": '''defina nome como "mundo"
+mostre "Olá, {nome}! 🐓"'''},
+    {"arquivo": "tabuada.galo", "saida": "", "codigo": '''para i de 1 até 5 faça
+    mostre "7 × {i} = {7 * i}"
+fim'''},
+    {"arquivo": "frutas.galo", "saida": "", "codigo": '''defina frutas como ["caju", "açaí", "pitanga"]
+para cada fruta em frutas faça
+    mostre maiúsculas(fruta), "tem", tamanho(fruta), "letras"
+fim'''},
+    {"arquivo": "ponto.galo", "saida": "", "codigo": '''registro Ponto(x, y)
+
+função distância(a, b)
+    retorne raiz((a.x - b.x) ^ 2 + (a.y - b.y) ^ 2)
+fim
+
+mostre distância(Ponto(0, 0), Ponto(3, 4))'''},
+    {"arquivo": "gigante.galo", "saida": "", "codigo": '''# inteiros não têm limite de tamanho
+mostre 2 ^ 128
+mostre 0.1 + 0.2 == 0.3, "(decimais!)"'''}
+]
+
+# Programa com um nome digitado errado: a página inicial mostra o erro real do compilador.
+constante PROGRAMA_COM_ERRO como '''defina nome como leia("Seu nome: ")
+mostre "Olá, {nmoe}!"
+'''
+
+função preparar_vitrine() retorna lista
+    defina saída como []
+    para cada p em VITRINE faça
+        defina r como compilar_programa(p.codigo, p.arquivo)
+        afirmar(r.ok, "o programa da vitrine {p.arquivo} deveria compilar")
+        adicionar(saída, {"arquivo": p.arquivo, "codigo": p.codigo, "bytecode": r.bytecode})
+    fim
+    retorne saída
+fim
+
+função erro_de_exemplo() retorna mapa
+    defina r como compilar_programa(PROGRAMA_COM_ERRO, "boas_vindas.galo")
+    defina linhas como dividir(r.erros[1].texto, "\n")
+    defina onde_sugestão como posição(linhas, "Sugestão:")
+    se onde_sugestão == nulo então
+        onde_sugestão = tamanho(linhas) + 1
+    fim
+    defina corpo como juntar(fatia(linhas, 2, onde_sugestão - 1), "\n") + "\n"
+    defina sugestão como se onde_sugestão <= tamanho(linhas) então juntar(fatia(linhas, onde_sugestão), "\n") senão ""
+    retorne {"titulo": linhas[1], "corpo": corpo, "sugestao": sugestão}
+fim
+
+# Números da faixa da página inicial, lidos dos próprios arquivos do projeto.
+função contar_números() retorna mapa
+    defina arquivos como []
+    defina total_linhas como 0
+    defina total_arquivos como 0
+    para cada pasta em [".", "compartilhado", "cliente", "exemplos"] faça
+        defina linhas_da_pasta como 0
+        defina galos como ordenar(filtrar(listar_arquivos(pasta), função(a) retorne termina_com(a, ".galo") fim))
+        para cada nome em galos faça
+            defina caminho como se pasta == "." então nome senão pasta + "/" + nome
+            defina n como tamanho(ler_linhas(caminho))
+            total_linhas += n
+            total_arquivos += 1
+            linhas_da_pasta += n
+            se pasta != "exemplos" então
+                adicionar(arquivos, {"nome": caminho, "linhas": n})
+            fim
+        fim
+        se pasta == "exemplos" então
+            adicionar(arquivos, {"nome": "exemplos/ ({tamanho(galos)} programas)", "linhas": linhas_da_pasta})
+        fim
+    fim
+    defina funções como "100+"
+    tente
+        defina referência como ler_arquivo("../docs/biblioteca-padrao.md")
+        defina achado como procurar_todos(referência, 'São [0-9]+ funções')
+        se tamanho(achado) > 0 então
+            funções = procurar_todos(achado[1], '[0-9]+')[1]
+        fim
+    capture
+    fim
+    retorne {
+        "palavras_chave": tamanho(PALAVRAS_CHAVE) + tamanho(LITERAIS),
+        "funcoes": funções,
+        "linhas_site": total_linhas,
+        "arquivos_site": total_arquivos,
+        "arquivos": arquivos
+    }
+fim
+
+função _erro(mensagem como texto, status como inteiro)
+    retorne resposta_json({"erro": mensagem}, status)
+fim
+
+função _código_do_pedido(pedido)
+    defina corpo como pedido.json
+    se tipo(corpo) != "mapa" ou tipo(obter(corpo, "código", nulo)) != "texto" então
+        retorne nulo
+    fim
+    retorne corpo.código
+fim
+
+função criar_app()
+    defina exemplos como carregar_exemplos("exemplos")
+    defina por_id como {}
+    para cada ex em exemplos faça
+        por_id[ex.id] = ex
+    fim
+    defina vitrine como preparar_vitrine()
+    defina erro como erro_de_exemplo()
+    defina números como contar_números()
+    defina app como criar_servidor()
+
+    # Dados que todas as páginas usam (cabeçalho e rodapé).
+    função página(título como texto, descrição como texto, script como texto, extras como mapa) retorna mapa
+        defina d como {
+            "titulo": título, "descricao": descrição, "script": script, "versao": VERSÃO,
+            "ativo_experimente": "", "ativo_painel": ""
+        }
+        para cada chave, valor em extras faça
+            d[chave] = valor
+        fim
+        retorne d
+    fim
+
+    função tela_experimente(código_inicial como texto, extras como mapa)
+        defina d como página("Experimente — GALO", "Escreva e execute programas GALO direto no navegador.",
+            "/js/experimente.galoc", {
+                "ativo_experimente": "ativo", "exemplos": exemplos, "codigo_inicial": código_inicial,
+                "entradas_iniciais": "", "restaurar": "nao"
+            })
+        para cada chave, valor em extras faça
+            d[chave] = valor
+        fim
+        retorne renderizar("paginas/experimente.html", d)
+    fim
+
+    app.get("/", função(pedido)
+        retorne renderizar("paginas/inicio.html", página(
+            "GALO — programe em português",
+            "GALO é uma linguagem de programação completa em português, com mensagens de erro que ensinam, do primeiro programa a sistemas web.",
+            "/js/inicio.galoc", {
+                "vitrine_json": para_json(vitrine),
+                "vitrine_arquivo": VITRINE[1].arquivo,
+                "vitrine_html": realçar(VITRINE[1].codigo),
+                "vitrine_saida": VITRINE[1].saida,
+                "numeros": números,
+                "arquivos_site": números.arquivos,
+                "erro": erro,
+                "exemplos": exemplos
+            }))
+    fim)
+
+    app.get("/experimente", função(pedido)
+        defina escolhido como obter(por_id, obter(pedido.consulta, "exemplo", ""), nulo)
+        se escolhido == nulo então
+            retorne tela_experimente(PROGRAMA_INICIAL, {"restaurar": "sim"})
+        fim
+        retorne tela_experimente(escolhido.codigo, {"entradas_iniciais": escolhido.entradas_texto})
+    fim)
+
+    app.get("/painel", função(pedido)
+        retorne renderizar("paginas/painel.html", página("Painel ao vivo — GALO",
+            "Uma cafeteria simulada e os seus números no Experimente, com gráficos desenhados em GALO.",
+            "/js/painel.galoc", {"ativo_painel": "ativo"}))
+    fim)
+
+    # ------------------------------------------------------------------ API
+
+    app.get("/api/exemplos", função(pedido)
+        retorne mapear(exemplos, função(ex)
+            retorne {"id": ex.id, "titulo": ex.titulo, "emoji": ex.emoji, "descricao": ex.descricao,
+                     "codigo": ex.codigo, "entradas": ex.entradas}
+        fim)
+    fim)
+
+    app.post("/api/compilar", função(pedido)
+        defina código como _código_do_pedido(pedido)
+        se código == nulo então
+            retorne _erro("Envie um JSON com o campo \"código\" (um texto).", 400)
+        fim
+        se tamanho(código) > LIMITE_CÓDIGO então
+            retorne _erro("O programa passou de {LIMITE_CÓDIGO} caracteres. Que tal dividir em partes menores?", 413)
+        fim
+        retorne compilar_programa(código, "programa.galo")
+    fim)
+
+    app.arquivos("/estatico", "publico")
+    app.cliente("/js/inicio.galoc", "cliente/inicio.galo")
+    app.cliente("/js/experimente.galoc", "cliente/experimente.galo")
+    app.cliente("/js/painel.galoc", "cliente/painel.galo")
+    retorne app
+fim

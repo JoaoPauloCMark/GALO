@@ -1,0 +1,38 @@
+programa "Listas"
+
+defina jogadores como ["Hulk", "Arana", "Everson"]
+
+para cada jogador em jogadores faça
+    mostre jogador
+fim
+
+adicionar(jogadores, "Scarpa")
+mostre "Elenco:", jogadores
+mostre "Total de jogadores:", tamanho(jogadores)
+mostre "Primeiro:", jogadores[1], "| Último:", jogadores[-1]
+
+para cada posicao, nome em jogadores faça
+    mostre "{posicao}º - {nome}"
+fim
+
+defina numeros como [7, 2, 9, 4, 1, 8]
+mostre "Ordenados:", ordenar(numeros)
+mostre "Original continua igual:", numeros
+mostre "Soma:", soma(numeros), "| Maior:", máximo(numeros), "| Menor:", mínimo(numeros)
+
+# Funções como valores: mapear, filtrar e reduzir
+defina dobrados como mapear(numeros, função(x) retorne x * 2 fim)
+defina pares como filtrar(numeros, função(x) retorne x % 2 == 0 fim)
+defina produto como reduzir(numeros, função(acc, x) retorne acc * x fim, 1)
+mostre "Dobrados:", dobrados
+mostre "Pares:", pares
+mostre "Produto:", produto
+
+# Listas de listas (matrizes)
+defina matriz como [[1, 2, 3], [4, 5, 6]]
+matriz[2][3] = 60
+mostre "Matriz:", matriz, "-> elemento [2][3] =", matriz[2][3]
+
+mostre "Contém Hulk?", "Hulk" em jogadores
+mostre "Fatia 2 a 3:", fatia(jogadores, 2, 3)
+mostre "Removido:", remover(jogadores, 1), "-> restam", jogadores

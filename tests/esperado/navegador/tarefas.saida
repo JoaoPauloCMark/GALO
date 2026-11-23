@@ -1,0 +1,16 @@
+[rede] GET /api/tarefas
+== início: resumo="0 tarefa(s), 0 pendente(s)" itens=[]
+[rede] POST /api/tarefas {"título":"Estudar GALO"}
+[rede] GET /api/tarefas
+== depois de criar: resumo="1 tarefa(s), 1 pendente(s)" itens=[Estudar GALO]
+[rede] POST /api/tarefas {"título":"Publicar o app"}
+[rede] GET /api/tarefas
+== segunda tarefa: resumo="2 tarefa(s), 2 pendente(s)" itens=[Estudar GALO, Publicar o app]
+[rede] PATCH /api/tarefas/1 {"feita":true}
+[rede] GET /api/tarefas
+== depois de marcar: resumo="2 tarefa(s), 1 pendente(s)" itens=[Estudar GALO (feita), Publicar o app]
+[confirmar] Apagar "Publicar o app"?
+[rede] DELETE /api/tarefas/2
+[rede] GET /api/tarefas
+== depois de apagar: resumo="1 tarefa(s), 0 pendente(s)" itens=[Estudar GALO (feita)]
+campo vazio depois de enviar: true

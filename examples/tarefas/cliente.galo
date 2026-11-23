@@ -1,0 +1,82 @@
+# Interface do gerenciador de tarefas. Este arquivo roda NO NAVEGADOR:
+# o servidor o compila e o entrega em /app.galoc, e galo.js o executa.
+
+defina lista como elemento("#tarefas")
+defina formulario como elemento("#nova-tarefa")
+defina campo como elemento("#titulo")
+defina resumo como elemento("#resumo")
+
+função desenhar(tarefas como lista)
+    lista.limpar()
+    para cada tarefa em tarefas faça
+        lista.adicionar(item_da_tarefa(tarefa))
+    fim
+    defina pendentes como filtrar(tarefas, função(t) retorne não t.feita fim)
+    resumo.texto = "{tamanho(tarefas)} tarefa(s), {tamanho(pendentes)} pendente(s)"
+fim
+
+função item_da_tarefa(tarefa)
+    defina item como criar_elemento("li")
+    se tarefa.feita então
+        item.adicionar_classe("feita")
+    fim
+
+    defina caixa como criar_elemento("input")
+    caixa.definir_atributo("type", "checkbox")
+    caixa.marcado = tarefa.feita
+    caixa.ao("mudança", função()
+        enviar("PATCH", "/api/tarefas/{tarefa.id}", {"feita": caixa.marcado})
+    fim)
+
+    defina apagar como criar_elemento("button", "✕")
+    apagar.definir_atributo("title", "Apagar tarefa")
+    apagar.ao("clique", função()
+        se confirmar("Apagar \"{tarefa.título}\"?") então
+            enviar("DELETE", "/api/tarefas/{tarefa.id}", nulo)
+        fim
+    fim)
+
+    item.adicionar(caixa)
+    item.adicionar(criar_elemento("span", tarefa.título))
+    item.adicionar(apagar)
+    retorne item
+fim
+
+# Envia uma alteração para a API e, se der certo, recarrega a lista.
+função enviar(método como texto, endereço como texto, dados)
+    buscar(endereço, {"método": método, "json": dados}, função(resposta)
+        se resposta.ok então
+            recarregar()
+        senão
+            mostrar_erro(resposta)
+        fim
+    fim)
+fim
+
+função recarregar()
+    buscar("/api/tarefas", nulo, função(resposta)
+        se resposta.ok então
+            desenhar(resposta.json)
+        senão
+            mostrar_erro(resposta)
+        fim
+    fim)
+fim
+
+função mostrar_erro(resposta)
+    se tipo(resposta.json) == "mapa" e "erro" em resposta.json então
+        alerta(resposta.json.erro)
+    senão
+        alerta("Não foi possível falar com o servidor (status {resposta.status}).")
+    fim
+fim
+
+formulario.ao("envio", função()
+    defina título como aparar(campo.valor)
+    se título != "" então
+        campo.valor = ""
+        enviar("POST", "/api/tarefas", {"título": título})
+    fim
+fim)
+
+recarregar()

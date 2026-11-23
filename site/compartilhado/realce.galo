@@ -1,0 +1,171 @@
+# Realce de sintaxe da GALO, escrito em GALO.
+#
+# realçar(código) devolve o código em HTML, com cada pedaço dentro de um <span class="r-...">.
+# O mesmo módulo roda no servidor (exemplos da página inicial, gerados uma vez) e no
+# navegador (o editor do "Experimente", a cada tecla).
+
+constante PALAVRAS_CHAVE como ["capture", "como", "constante", "continue", "defina", "e", "em", "enquanto",
+    "então", "eu", "faça", "fim", "função", "importe", "lance", "mostre", "não", "ou", "para", "pare",
+    "programa", "registro", "repita", "retorna", "retorne", "se", "senão", "tente"]
+# Palavras que só têm papel especial em certos comandos (para i de 1 até 10 passo 2...).
+constante CONTEXTUAIS como ["de", "até", "passo", "vezes", "cada"]
+constante LITERAIS como ["verdadeiro", "falso", "nulo"]
+constante TIPOS como ["inteiro", "decimal", "número", "texto", "booleano", "lista", "mapa", "qualquer"]
+
+defina _ACENTOS como {"á": "a", "à": "a", "â": "a", "ã": "a", "é": "e", "ê": "e", "í": "i", "ó": "o",
+    "ô": "o", "õ": "o", "ú": "u", "ü": "u", "ç": "c", "Á": "A", "É": "E", "Ç": "C"}
+
+# Como na linguagem, as palavras valem com ou sem acento ("então" = "entao").
+função sem_acentos(palavra como texto) retorna texto
+    defina saída como ""
+    para cada c em caracteres(palavra) faça
+        saída += obter(_ACENTOS, c, c)
+    fim
+    retorne saída
+fim
+
+# Guarda cada palavra com e sem acentos, para a consulta ser direta.
+função _conjunto(palavras como lista) retorna mapa
+    defina m como {}
+    para cada p em palavras faça
+        m[p] = verdadeiro
+        m[sem_acentos(p)] = verdadeiro
+    fim
+    retorne m
+fim
+
+defina _PC como _conjunto(PALAVRAS_CHAVE + CONTEXTUAIS)
+
+# Grafia oficial de cada palavra-chave, a partir da forma sem acentos ("entao" -> "então").
+defina _OFICIAL como {}
+para cada palavra_oficial em PALAVRAS_CHAVE + CONTEXTUAIS faça
+    _OFICIAL[sem_acentos(palavra_oficial)] = palavra_oficial
+fim
+defina _LIT como _conjunto(LITERAIS)
+defina _TIP como _conjunto(TIPOS)
+
+função é_letra(c como texto) retorna booleano
+    retorne (c >= "a" e c <= "z") ou (c >= "A" e c <= "Z") ou c == "_" ou código(c) >= 192
+fim
+
+função é_dígito(c como texto) retorna booleano
+    retorne c >= "0" e c <= "9"
+fim
+
+função _span(classe como texto, conteúdo como texto) retorna texto
+    retorne "<span class=\"r-{classe}\">" + escapar_html(conteúdo) + "</span>"
+fim
+
+# Uma única expressão regular separa o código em pedaços (uma chamada nativa, rápida nas duas
+# máquinas virtuais); depois cada pedaço é classificado pelo primeiro caractere.
+constante _ASPAS3 como "'''"
+constante _PADRÃO como juntar([
+    '#\[[\s\S]*?(?:\]#|$)',                                   # comentário de bloco #[ ... ]#
+    '#[^\n]*',                                                # comentário de linha
+    '"""[\s\S]*?(?:"""|$)',                                   # texto de várias linhas, com interpolação
+    _ASPAS3 + '[\s\S]*?(?:' + _ASPAS3 + '|$)',                # texto literal de várias linhas
+    '"(?:\\[\s\S]|[^"\\\n])*"?',                              # texto com interpolação
+    "'" + '[^' + "'" + '\n]*' + "'?",                         # texto literal
+    '[0-9][0-9_]*(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?',          # número
+    '[A-Za-z_À-￿][A-Za-z0-9_À-￿]*',       # nome
+    '[ \t\r\n]+',                                             # espaços
+    '[\s\S]'                                                  # qualquer outro caractere
+], "|")
+
+# Texto entre aspas duplas (ou triplas duplas) com as interpolações {…} realçadas por dentro.
+função _texto_interpolado(pedaço como texto) retorna texto
+    se não ("\{" em pedaço) então
+        retorne _span("txt", pedaço)
+    fim
+    defina cs como caracteres(pedaço)
+    defina final como tamanho(cs)
+    defina partes como []
+    defina atual como ""
+    defina i como 1
+    enquanto i <= final faça
+        defina c como cs[i]
+        se c == "\\" e i < final então
+            atual += c + cs[i + 1]
+            i += 2
+        senão se c == "\{" então
+            defina profundidade como 1
+            defina j como i + 1
+            enquanto j <= final e profundidade > 0 faça
+                se cs[j] == "\{" então
+                    profundidade += 1
+                senão se cs[j] == "\}" então
+                    profundidade -= 1
+                fim
+                j += 1
+            fim
+            adicionar(partes, _span("txt", atual))
+            atual = ""
+            defina dentro como se j - 2 >= i + 1 então juntar(fatia(cs, i + 1, j - 2), "") senão ""
+            defina fecha como se profundidade == 0 então "\}" senão ""
+            adicionar(partes, "<span class=\"r-interp\">\{</span>" + realçar(dentro) + "<span class=\"r-interp\">" + fecha + "</span>")
+            i = j
+        senão
+            atual += c
+            i += 1
+        fim
+    fim
+    adicionar(partes, _span("txt", atual))
+    retorne juntar(partes, "")
+fim
+
+função realçar(código como texto) retorna texto
+    defina pedaços como procurar_todos(código, _PADRÃO)
+    defina n como tamanho(pedaços)
+    defina saída como []
+    para cada k, p em pedaços faça
+        defina c como p[1]
+        se c == "#" então
+            adicionar(saída, _span("com", p))
+        senão se c == "\"" então
+            adicionar(saída, _texto_interpolado(p))
+        senão se c == "'" então
+            adicionar(saída, _span("txt", p))
+        senão se é_dígito(c) então
+            adicionar(saída, _span("num", p))
+        senão se é_letra(c) então
+            defina anterior como se k > 1 então pedaços[k - 1] senão ""
+            defina seguinte como se k < n então pedaços[k + 1] senão ""
+            se k + 1 < n e aparar(seguinte) == "" e não ("\n" em seguinte) então
+                seguinte = pedaços[k + 2]
+            fim
+            se anterior == "." então
+                adicionar(saída, escapar_html(p))
+            senão se p em _PC então
+                adicionar(saída, _span("pc", p))
+            senão se p em _LIT então
+                adicionar(saída, _span("lit", p))
+            senão se seguinte == "(" então
+                adicionar(saída, _span((se c >= "A" e c <= "Z" então "tipo" senão "fn"), p))
+            senão se (c >= "A" e c <= "Z") ou p em _TIP então
+                adicionar(saída, _span("tipo", p))
+            senão
+                adicionar(saída, escapar_html(p))
+            fim
+        senão se c em "+-*/%^=<>!" então
+            adicionar(saída, _span("op", p))
+        senão se c em "()[]\{\},:;." então
+            adicionar(saída, _span("pt", p))
+        senão
+            adicionar(saída, escapar_html(p))
+        fim
+    fim
+    retorne juntar(saída, "")
+fim
+
+# Quantas vezes cada palavra-chave aparece (textos e comentários são pedaços inteiros, então
+# não entram na conta). Usado nas estatísticas do painel.
+função contar_palavras_chave(código como texto) retorna mapa
+    defina contagem como {}
+    para cada p em procurar_todos(código, _PADRÃO) faça
+        se p em _PC então
+            defina chave como _OFICIAL[sem_acentos(p)]
+            contagem[chave] = obter(contagem, chave, 0) + 1
+        fim
+    fim
+    retorne contagem
+fim

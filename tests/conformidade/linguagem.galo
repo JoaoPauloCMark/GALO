@@ -1,0 +1,61 @@
+programa "Conformidade da linguagem"
+importe "lib/formas.galo" como formas
+importe Ponto, novo_quadrado de "lib/formas"
+
+defina q como novo_quadrado(3)
+mostre q, q.área(), q.escalar().área(), q.escalar(fator: 0.5).área()
+mostre Ponto(1), Ponto(y: 2, x: 1) == Ponto(1, 2), tipo(q), tipo(formas), tipo(Ponto)
+defina m como q.área
+mostre m(), formas.contador_de_criações
+tente
+    q.lado = 1
+capture erro
+    mostre erro.código, erro.mensagem
+fim
+tente
+    q.largura = "x"
+capture erro
+    mostre erro.código, erro.mensagem
+fim
+função saudar(nome, saudação = "Olá", pontuação = "!")
+    retorne "{saudação}, {nome}{pontuação}"
+fim
+mostre saudar("Ana"), saudar("Bia", pontuação: "?"), saudar(pontuação: ".", nome: "Caio", saudação: "Oi")
+defina f como função(a, b = a * 10) retorne [a, b] fim
+mostre f(1), f(1, 2), f(b: 5, a: 4)
+mostre se 2 > 1 então "sim" senão "não", [se falso então 1 senão 2]
+defina dados como '{"a": [1, 2.0, -3.5e2, true, null], "b": {"c": "ã\\n"}}'
+defina v como de_json(dados)
+mostre v, tipo(v.a[1]), tipo(v.a[2]), para_json(v), para_json([], 2), para_json({"x": [1, {"y": nulo}]}, 2)
+mostre para_json(q)
+mostre """
+    multilinha {1 + 1}
+      recuada
+    """, '''literal {sem} interpolação'''
+defina contadores como []
+para cada i em [1, 2, 3] faça
+    adicionar(contadores, função() retorne i * i fim)
+fim
+mostre mapear(contadores, função(c) retorne c() fim)
+função profundo(n)
+    se n == 0 então retorne 0 fim
+    retorne 1 + profundo(n - 1)
+fim
+mostre profundo(5000)
+mostre 2 ^ 100, -7 // 2, -7 % 3, 7.5 // 2, -7.5 % 2, 1 / 3, 10 / 4, 2 ^ -2, 1e16, 1.5e-7, 0.1 + 0.2, 100.0, -0.0
+mostre 1 == 1.0, 1 == verdadeiro, [1, [2]] == [1, [2]], {"a": 1} == {"a": 1.0}, 1 < 2 <= 2, "b" > "a"
+defina um_texto como "a"
+defina sem_valor como nulo
+para cada erro_esperado em [função() retorne 1 / 0 fim, função() retorne [1][5] fim, função() retorne {}["x"] fim,
+        função() retorne um_texto + 1 fim, função() retorne inteiro("x") fim, função() retorne sem_valor.campo fim] faça
+    tente
+        erro_esperado()
+    capture e1
+        mostre e1.código, e1.mensagem
+    fim
+fim
+tente
+    lance {"mensagem": "personalizado", "dado": 42}
+capture e2
+    mostre e2.mensagem, e2.dado
+fim

@@ -1,0 +1,136 @@
+# Gráficos em SVG gerados por GALO: cada função devolve um texto com o <svg> pronto.
+# Usados no painel (no navegador, a cada atualização) e na página inicial.
+
+função _n(x) retorna texto
+    retorne formatar(x, 1)
+fim
+
+função _faixa(valores como lista, mín_fixo, máx_fixo) retorna mapa
+    defina menor como se mín_fixo == nulo então mínimo(valores) senão mín_fixo
+    defina maior como se máx_fixo == nulo então máximo(valores) senão máx_fixo
+    se maior == menor então
+        maior = menor + 1
+    fim
+    retorne {"menor": menor, "maior": maior}
+fim
+
+função _rótulo_valor(v) retorna texto
+    se tipo(v) == "inteiro" então
+        retorne texto(v)
+    fim
+    retorne substituir(formatar(v, 1), ".", ",")
+fim
+
+# Linha com área preenchida. `valores` é uma lista de números (do mais antigo ao mais novo).
+função linha(valores como lista, ident como texto, cor = "#f97316", unidade = "", mín_fixo = nulo, máx_fixo = nulo,
+             largura = 640, altura = 220) retorna texto
+    se tamanho(valores) < 2 então
+        retorne "<svg viewBox=\"0 0 {largura} {altura}\" class=\"grafico\"></svg>"
+    fim
+    defina esq como 44
+    defina dir como 18
+    defina topo como 14
+    defina base como 26
+    defina faixa como _faixa(valores, mín_fixo, máx_fixo)
+    defina w como largura - esq - dir
+    defina h como altura - topo - base
+    defina n como tamanho(valores)
+    defina pontos como []
+    para cada i, v em valores faça
+        defina x como esq + (i - 1) * w / (n - 1)
+        defina y como topo + h - (v - faixa.menor) * h / (faixa.maior - faixa.menor)
+        adicionar(pontos, [x, y])
+    fim
+    defina trilha como []
+    para cada i, p em pontos faça
+        adicionar(trilha, (se i == 1 então "M" senão "L") + _n(p[1]) + " " + _n(p[2]))
+    fim
+    defina caminho como juntar(trilha, " ")
+    defina área como caminho + " L" + _n(esq + w) + " " + _n(topo + h) + " L" + _n(esq) + " " + _n(topo + h) + " Z"
+    defina grade como []
+    para k de 0 até 3 faça
+        defina gy como topo + h * k / 3
+        defina gv como faixa.maior - (faixa.maior - faixa.menor) * k / 3
+        adicionar(grade, "<line x1=\"{esq}\" x2=\"{esq + w}\" y1=\"{_n(gy)}\" y2=\"{_n(gy)}\" class=\"g-grade\"/>")
+        adicionar(grade, "<text x=\"{esq - 8}\" y=\"{_n(gy + 4)}\" class=\"g-eixo\" text-anchor=\"end\">{_rótulo_valor(gv)}</text>")
+    fim
+    defina ponta como último(pontos)
+    defina svg como "<svg viewBox=\"0 0 {largura} {altura}\" class=\"grafico\" role=\"img\" aria-label=\"Gráfico de linha\">"
+    svg += "<defs><linearGradient id=\"{ident}\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\">"
+    svg += "<stop offset=\"0%\" stop-color=\"{cor}\" stop-opacity=\".28\"/><stop offset=\"100%\" stop-color=\"{cor}\" stop-opacity=\"0\"/>"
+    svg += "</linearGradient></defs>"
+    svg += juntar(grade, "")
+    svg += "<path d=\"{área}\" fill=\"url(#{ident})\"/>"
+    svg += "<path d=\"{caminho}\" fill=\"none\" stroke=\"{cor}\" stroke-width=\"2.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/>"
+    svg += "<circle cx=\"{_n(ponta[1])}\" cy=\"{_n(ponta[2])}\" r=\"5\" fill=\"{cor}\" class=\"g-pulso\"/>"
+    svg += "<text x=\"{_n(ponta[1] - 8)}\" y=\"{_n(ponta[2] - 12)}\" class=\"g-valor\" text-anchor=\"end\">{_rótulo_valor(último(valores))}{unidade}</text>"
+    retorne svg + "</svg>"
+fim
+
+# Colunas verticais com o valor em cima e o rótulo embaixo. `destaque` é a posição pintada de outra cor.
+função barras(rótulos como lista, valores como lista, cor = "#fb923c", destaque = 0, cor_destaque = "#e11d48",
+              largura = 640, altura = 220) retorna texto
+    defina esq como 12
+    defina topo como 24
+    defina base como 28
+    defina n como tamanho(valores)
+    defina maior como máximo(máximo(valores), 1)
+    defina vaga como (largura - 2 * esq) / n
+    defina larg_barra como vaga * 0.62
+    defina h como altura - topo - base
+    defina partes como ["<svg viewBox=\"0 0 {largura} {altura}\" class=\"grafico\" role=\"img\" aria-label=\"Gráfico de barras\">"]
+    para cada i, v em valores faça
+        defina bh como máximo(v * h / maior, 2)
+        defina x como esq + (i - 1) * vaga + (vaga - larg_barra) / 2
+        defina y como topo + h - bh
+        defina c como se i == destaque então cor_destaque senão cor
+        adicionar(partes, "<rect x=\"{_n(x)}\" y=\"{_n(y)}\" width=\"{_n(larg_barra)}\" height=\"{_n(bh)}\" rx=\"6\" fill=\"{c}\" class=\"g-barra\"><title>{escapar_html(texto(rótulos[i]))}: {_rótulo_valor(v)}</title></rect>")
+        adicionar(partes, "<text x=\"{_n(x + larg_barra / 2)}\" y=\"{_n(y - 7)}\" class=\"g-valor\" text-anchor=\"middle\">{_rótulo_valor(v)}</text>")
+        adicionar(partes, "<text x=\"{_n(x + larg_barra / 2)}\" y=\"{altura - 8}\" class=\"g-eixo\" text-anchor=\"middle\">{escapar_html(texto(rótulos[i]))}</text>")
+    fim
+    adicionar(partes, "</svg>")
+    retorne juntar(partes, "")
+fim
+
+# Rosca (gráfico de pizza com furo). `fatias` é uma lista de mapas {rótulo, valor, cor}.
+função rosca(fatias como lista, título_centro como texto, valor_centro como texto) retorna texto
+    defina total como 0
+    para cada f em fatias faça
+        total += f.valor
+    fim
+    defina raio como 70
+    defina circunferência como 2 * pi * raio
+    defina partes como ["<svg viewBox=\"0 0 200 200\" class=\"grafico rosca\" role=\"img\" aria-label=\"Gráfico de rosca\">"]
+    adicionar(partes, "<circle cx=\"100\" cy=\"100\" r=\"{raio}\" fill=\"none\" stroke=\"#f5efe6\" stroke-width=\"26\"/>")
+    defina andado como 0
+    para cada f em fatias faça
+        se total > 0 e f.valor > 0 então
+            defina pedaço como circunferência * f.valor / total
+            adicionar(partes, "<circle cx=\"100\" cy=\"100\" r=\"{raio}\" fill=\"none\" stroke=\"{f.cor}\" stroke-width=\"26\" " +
+                "stroke-dasharray=\"{_n(máximo(pedaço - 2, 0))} {_n(circunferência)}\" stroke-dashoffset=\"{_n(-andado)}\" " +
+                "transform=\"rotate(-90 100 100)\" class=\"g-fatia\"><title>{escapar_html(f.rótulo)}: {f.valor}</title></circle>")
+            andado += pedaço
+        fim
+    fim
+    adicionar(partes, "<text x=\"100\" y=\"96\" text-anchor=\"middle\" class=\"g-centro-valor\">{escapar_html(valor_centro)}</text>")
+    adicionar(partes, "<text x=\"100\" y=\"118\" text-anchor=\"middle\" class=\"g-centro-titulo\">{escapar_html(título_centro)}</text>")
+    adicionar(partes, "</svg>")
+    retorne juntar(partes, "")
+fim
+
+# Linha pequena, sem eixos, para cartões de indicadores.
+função faísca(valores como lista, cor = "#f97316", largura = 120, altura = 36) retorna texto
+    se tamanho(valores) < 2 então
+        retorne ""
+    fim
+    defina faixa como _faixa(valores, nulo, nulo)
+    defina n como tamanho(valores)
+    defina pontos como []
+    para cada i, v em valores faça
+        defina x como 2 + (i - 1) * (largura - 4) / (n - 1)
+        defina y como altura - 3 - (v - faixa.menor) * (altura - 6) / (faixa.maior - faixa.menor)
+        adicionar(pontos, _n(x) + "," + _n(y))
+    fim
+    defina lista_pontos como juntar(pontos, " ")
+    retorne "<svg viewBox=\"0 0 {largura} {altura}\" class=\"faisca\" aria-hidden=\"true\"><polyline points=\"{lista_pontos}\" fill=\"none\" stroke=\"{cor}\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
+fim

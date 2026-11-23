@@ -1,0 +1,285 @@
+# Página inicial (roda no navegador): a janela que digita e executa programas sozinha, os
+# exemplos executáveis, a calculadora e o mini painel da cafeteria.
+
+importe realçar de "../compartilhado/realce.galo"
+importe calcular de "../compartilhado/calculadora.galo"
+importe "../compartilhado/cafeteria.galo" como cafeteria
+importe linha de "../compartilhado/graficos.galo"
+importe "comum.galo" como comum
+
+comum.ativar_menu()
+
+função linhas_de(texto_digitado como texto) retorna lista
+    se aparar(texto_digitado) == "" então
+        retorne []
+    fim
+    retorne dividir(texto_digitado, "\n")
+fim
+
+# ------------------------------------------------------------------ vitrine: digita, executa, repete
+
+defina vitrine como de_json(elemento("#vitrine").atributo("data-programas"))
+defina código_vitrine como elemento("#vitrine-codigo")
+defina saída_vitrine como elemento("#vitrine-saida")
+defina arquivo_vitrine como elemento("#vitrine-arquivo")
+defina programa_atual como 1
+
+função digitar(prog, ao_terminar)
+    defina letras como caracteres(prog.codigo)
+    defina pos como 0
+    defina relógio como 0
+    arquivo_vitrine.texto = prog.arquivo
+    saída_vitrine.texto = ""
+    código_vitrine.html = ""
+    relógio = a_cada(34, função()
+        # de 1 a 3 letras por vez, e uma por vez nas quebras de linha (parece gente digitando)
+        defina passo como se pos < tamanho(letras) e letras[pos + 1] == "\n" então 1 senão aleatório_entre(1, 3)
+        pos = mínimo(pos + passo, tamanho(letras))
+        código_vitrine.html = realçar(juntar(fatia(letras, 1, pos), ""))
+        se pos >= tamanho(letras) então
+            cancelar_temporizador(relógio)
+            depois(350, ao_terminar)
+        fim
+    fim)
+fim
+
+função mostrar_aos_poucos(texto_saída como texto, ao_terminar)
+    defina linhas como dividir(texto_saída, "\n")
+    defina mostradas como 0
+    defina relógio como 0
+    relógio = a_cada(160, função()
+        mostradas += 1
+        saída_vitrine.texto = juntar(fatia(linhas, 1, mostradas), "\n")
+        se mostradas >= tamanho(linhas) então
+            cancelar_temporizador(relógio)
+            ao_terminar()
+        fim
+    fim)
+fim
+
+função executar_vitrine(prog, ao_terminar)
+    executar_programa(prog.bytecode, nulo, função(res)
+        defina texto_saída como res.saída
+        se res.erro != nulo então
+            texto_saída += "⚠ " + res.erro.mensagem
+        fim
+        mostrar_aos_poucos(aparar(texto_saída), função()
+            depois(3200, ao_terminar)
+        fim)
+    fim)
+fim
+
+função próximo_programa()
+    programa_atual = (programa_atual % tamanho(vitrine)) + 1
+    defina prog como vitrine[programa_atual]
+    digitar(prog, função()
+        executar_vitrine(prog, próximo_programa)
+    fim)
+fim
+
+# O primeiro programa já vem escrito do servidor: só executa e depois segue para o próximo.
+depois(700, função()
+    executar_vitrine(vitrine[1], próximo_programa)
+fim)
+
+# ------------------------------------------------------------------ exemplos
+
+função ativar_aba(id como texto)
+    para cada aba em elementos(".aba") faça
+        se aba.atributo("data-id") == id então
+            aba.adicionar_classe("ativa")
+        senão
+            aba.remover_classe("ativa")
+        fim
+    fim
+    para cada painel em elementos(".exemplo") faça
+        se painel.atributo("data-id") == id então
+            painel.adicionar_classe("ativa")
+        senão
+            painel.remover_classe("ativa")
+        fim
+    fim
+fim
+
+para cada aba em elementos(".aba") faça
+    aba.ao("clique", função()
+        ativar_aba(aba.atributo("data-id"))
+    fim)
+fim
+
+função preparar_exemplo(artigo)
+    defina botão como artigo.procurar(".executar-exemplo")
+    defina console como artigo.procurar(".console")
+    defina saída como artigo.procurar(".console-saida")
+    defina erros como artigo.procurar(".erros")
+    defina situação como artigo.procurar(".status")
+    botão.ao("clique", função()
+        console.remover_atributo("hidden")
+        comum.mostrar_rodando(saída, erros, situação)
+        botão.definir_atributo("disabled", "")
+        defina código como artigo.procurar(".fonte").valor
+        defina entradas como linhas_de(artigo.procurar(".entradas-exemplo").valor)
+        comum.rodar_código(código, "exemplo", entradas, função(resultado)
+            botão.remover_atributo("disabled")
+            comum.mostrar_resultado(resultado, saída, erros, situação)
+        fim)
+    fim)
+fim
+
+para cada artigo em elementos(".exemplo") faça
+    preparar_exemplo(artigo)
+fim
+
+# ------------------------------------------------------------------ calculadora
+
+defina calculadora como elemento("#calculadora")
+defina tela_expressão como elemento("#calc-expressao")
+defina tela_resultado como elemento("#calc-resultado")
+defina lista_histórico como elemento("#calc-historico")
+defina expressão como "2 ^ 100"
+defina acabou_de_calcular como verdadeiro
+defina histórico como recuperar("galo-calculadora", [])
+constante OPERADORES como ["+", "−", "×", "÷", "^"]
+
+função mostrar_histórico()
+    lista_histórico.limpar()
+    para cada item em histórico faça
+        defina li como criar_elemento("li")
+        li.adicionar(criar_elemento("span", item[1]))
+        li.adicionar(criar_elemento("b", "= " + item[2]))
+        li.definir_atributo("title", "Usar esta conta de novo")
+        li.ao("clique", função()
+            expressão = item[1]
+            acabou_de_calcular = falso
+            atualizar_tela(verdadeiro)
+            calculadora.focar()
+        fim)
+        lista_histórico.adicionar(li)
+    fim
+fim
+
+função atualizar_tela(prévia como booleano)
+    tela_expressão.texto = se expressão == "" então " " senão expressão
+    tela_resultado.remover_classe("erro")
+    tela_resultado.remover_classe("previa")
+    tela_resultado.remover_classe("longo")
+    tela_resultado.remover_classe("muito-longo")
+    se expressão == "" então
+        tela_resultado.texto = "0"
+        retorne
+    fim
+    defina r como calcular(expressão)
+    se r.ok então
+        tela_resultado.texto = r.texto
+        se tamanho(r.texto) > 40 então
+            tela_resultado.adicionar_classe("muito-longo")
+        senão se tamanho(r.texto) > 16 então
+            tela_resultado.adicionar_classe("longo")
+        fim
+        se prévia então
+            tela_resultado.adicionar_classe("previa")
+        fim
+    senão se prévia então
+        tela_resultado.texto = "…"
+        tela_resultado.adicionar_classe("previa")
+    senão
+        tela_resultado.texto = r.mensagem
+        tela_resultado.adicionar_classe("erro")
+    fim
+fim
+
+função apertar(tecla como texto)
+    se tecla == "C" então
+        expressão = ""
+    senão se tecla == "⌫" então
+        se termina_com(expressão, " ") então
+            expressão = aparar(fatia(expressão, 1, -4))
+        senão se expressão != "" então
+            expressão = fatia(expressão, 1, -2)
+        fim
+    senão se tecla == "=" então
+        defina r como calcular(expressão)
+        se r.ok então
+            inserir(histórico, 1, [expressão, r.texto])
+            se tamanho(histórico) > 4 então
+                remover(histórico, 5)
+            fim
+            armazenar("galo-calculadora", histórico)
+            mostrar_histórico()
+            atualizar_tela(falso)
+            expressão = substituir(r.texto, ".", "")
+            acabou_de_calcular = verdadeiro
+        senão
+            atualizar_tela(falso)
+        fim
+        retorne
+    senão
+        defina é_operador como tecla em OPERADORES ou tecla == "%"
+        se acabou_de_calcular e não é_operador então
+            expressão = ""
+        fim
+        se tecla em OPERADORES então
+            expressão += " " + tecla + " "
+        senão
+            expressão += tecla
+        fim
+    fim
+    acabou_de_calcular = falso
+    atualizar_tela(verdadeiro)
+fim
+
+função piscar(tecla como texto)
+    para cada b em elementos(".tecla") faça
+        se b.atributo("data-tecla") == tecla então
+            b.adicionar_classe("apertada")
+            depois(110, função()
+                b.remover_classe("apertada")
+            fim)
+        fim
+    fim
+fim
+
+para cada b em elementos(".tecla") faça
+    b.ao("clique", função()
+        apertar(b.atributo("data-tecla"))
+        calculadora.focar()
+    fim)
+fim
+
+defina TECLADO como {"-": "−", "*": "×", "x": "×", "/": "÷", ".": ",", "Enter": "=", "=": "=",
+    "Backspace": "⌫", "Escape": "C", "Delete": "C", "r": "√", "p": "π"}
+
+calculadora.ao("tecla", função(evento)
+    defina tecla como evento.tecla
+    se evento.ctrl ou evento.meta ou evento.alt ou tecla == nulo então
+        retorne
+    fim
+    defina traduzida como obter(TECLADO, tecla, tecla)
+    se tamanho(traduzida) == 1 e traduzida em "0123456789,+−×÷^%()√π" ou traduzida == "=" ou traduzida == "⌫" ou traduzida == "C" então
+        apertar(traduzida)
+        piscar(traduzida)
+    fim
+fim)
+
+mostrar_histórico()
+
+# ------------------------------------------------------------------ mini painel da cafeteria
+
+defina mini como cafeteria.nova_cafeteria(aleatório_entre(1, 1000000))
+
+função desenhar_mini()
+    elemento("#mini-xicaras").texto = texto(mini.vendidas_hoje())
+    elemento("#mini-temperatura").texto = substituir(formatar(mini.temperatura_atual(), 1), ".", ",") + "°"
+    elemento("#mini-satisfacao").texto = substituir(formatar(mini.satisfação, 0), ".", ",") + "%"
+    elemento("#mini-grafico").html = linha(mini.temperaturas, "mini-temperatura", cor: "#92400e", unidade: "°", mín_fixo: 80, máx_fixo: 100, altura: 300)
+    elemento("#mini-hora").texto = "Hora na cafeteria: " + mini.hora() + (se mini.aberta() então " (aberta)" senão " (fechada)")
+fim
+
+desenhar_mini()
+a_cada(1500, função()
+    cafeteria.avançar(mini)
+    desenhar_mini()
+fim)
+
+# Interface montada (usado pelos testes para saber que a página está pronta).
+elemento("body").definir_atributo("data-pronto", "sim")

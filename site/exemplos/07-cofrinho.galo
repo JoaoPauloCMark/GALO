@@ -1,0 +1,35 @@
+# título: Cofrinho
+# emoji: 🐷
+# descrição: Registros juntam dados e funções. Este cofrinho recusa saques maiores que o saldo (com tente/capture).
+função reais(valor como número) retorna texto
+    retorne "R$ " + substituir(formatar(valor, 2), ".", ",")
+fim
+
+registro Cofrinho
+    dono como texto
+    saldo como decimal = 0
+
+    função depositar(valor como número)
+        eu.saldo += valor
+        mostre "  +", reais(valor)
+    fim
+
+    função sacar(valor como número)
+        se valor > eu.saldo então
+            lance "Saldo insuficiente para sacar {reais(valor)}."
+        fim
+        eu.saldo -= valor
+        mostre "  −", reais(valor)
+    fim
+fim
+
+defina cofre como Cofrinho("Lia")
+cofre.depositar(50)
+cofre.depositar(12.5)
+cofre.sacar(20)
+tente
+    cofre.sacar(100)
+capture problema
+    mostre "  🚫", problema.mensagem
+fim
+mostre "Saldo de {cofre.dono}: {reais(cofre.saldo)}"

@@ -1,0 +1,20 @@
+Hulk
+Arana
+Everson
+Elenco: ["Hulk", "Arana", "Everson", "Scarpa"]
+Total de jogadores: 4
+Primeiro: Hulk | Último: Scarpa
+1º - Hulk
+2º - Arana
+3º - Everson
+4º - Scarpa
+Ordenados: [1, 2, 4, 7, 8, 9]
+Original continua igual: [7, 2, 9, 4, 1, 8]
+Soma: 31 | Maior: 9 | Menor: 1
+Dobrados: [14, 4, 18, 8, 2, 16]
+Pares: [2, 4, 8]
+Produto: 4032
+Matriz: [[1, 2, 3], [4, 5, 60]] -> elemento [2][3] = 60
+Contém Hulk? verdadeiro
+Fatia 2 a 3: ["Arana", "Everson"]
+Removido: Hulk -> restam ["Arana", "Everson", "Scarpa"]

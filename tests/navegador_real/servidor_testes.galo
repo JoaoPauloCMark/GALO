@@ -1,0 +1,11 @@
+# Servidor usado pelos testes em navegadores reais: serve a página de testes e os
+# programas compilados, e grava o resultado que a página envia de volta.
+defina app como criar_servidor()
+
+app.post("/resultado", função(pedido)
+    escrever_arquivo(variável_ambiente("ARQUIVO_RESULTADO"), pedido.corpo)
+    retorne {"ok": verdadeiro}
+fim)
+
+app.arquivos("/", variável_ambiente("PASTA_PUBLICA"))
+app.iniciar(inteiro(variável_ambiente("PORTA")))

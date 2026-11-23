@@ -1,0 +1,11 @@
+# título: Contador de palavras
+# emoji: 📚
+# descrição: Mapas contam quantas vezes cada palavra aparece. Funções como filtrar() recebem outras funções.
+defina frase como "o rato roeu a roupa do rei de roma e a rainha com raiva resolveu remendar"
+defina contagem como {}
+para cada palavra em dividir(frase) faça
+    contagem[palavra] = obter(contagem, palavra, 0) + 1
+fim
+mostre contagem
+defina com_r como filtrar(dividir(frase), função(p) retorne começa_com(p, "r") fim)
+mostre "Começam com R:", tamanho(com_r), "→", juntar(com_r, ", ")

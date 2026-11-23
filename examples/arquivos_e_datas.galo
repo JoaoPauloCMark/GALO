@@ -1,0 +1,24 @@
+programa "Arquivos e datas"
+
+defina caminho como "galo_exemplo_notas.txt"
+escrever_arquivo(caminho, "primeira linha\n")
+anexar_arquivo(caminho, "segunda linha\n")
+anexar_arquivo(caminho, "terceira linha\n")
+
+defina linhas como ler_linhas(caminho)
+mostre "O arquivo tem {tamanho(linhas)} linhas:"
+para cada numero, linha em linhas faça
+    mostre "  {numero}: {maiúsculas(linha)}"
+fim
+apagar_arquivo(caminho)
+mostre "Arquivo apagado?", não arquivo_existe(caminho)
+
+defina momento como agora()
+mostre "Hoje é {momento.dia_da_semana}, {data_atual()}, às {hora_atual()}."
+mostre "Ano atual:", momento.ano
+defina inicio como tempo()
+defina soma_total como 0
+para i de 1 até 10000 faça
+    soma_total += i
+fim
+mostre "Soma de 1 a 10000 = {soma_total} (calculada em {formatar(tempo() - inicio, 3)} s)"

@@ -1,0 +1,21 @@
+programa "Site da linguagem GALO"
+# O site oficial da GALO, escrito em GALO.
+#
+#   galo executar site/servidor.galo        e abra http://localhost:8080
+#
+# Variáveis de ambiente:
+#   PORT ou PORTA   porta (padrão 8080)
+#   HOST            endereço em que o servidor escuta (padrão 127.0.0.1; use 0.0.0.0 na web)
+#   GALO_PRODUCAO   com 1, erros internos não mostram detalhes para quem visita
+# O site não usa banco de dados nem grava arquivos: pode rodar em qualquer hospedagem.
+importe criar_app de "app.galo"
+
+defina porta como inteiro(variável_ambiente("PORT", variável_ambiente("PORTA", "8080")))
+defina endereço como variável_ambiente("HOST", "127.0.0.1")
+defina app como criar_app()
+# Compila já os programas do navegador: a primeira visita fica rápida e um erro aparece aqui.
+para cada programa_js em ["/js/inicio.galoc", "/js/experimente.galoc", "/js/painel.galoc"] faça
+    afirmar(app.testar("GET", programa_js).status == 200, "o programa {programa_js} não compilou (veja o erro acima)")
+fim
+mostre "🐓 Site da GALO no ar: http://localhost:{porta}"
+app.iniciar(porta, endereço)

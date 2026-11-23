@@ -1,0 +1,7 @@
+10 / 2 = 5.0
+Falhou: Divisor zero não é permitido
+10 / 4 = 2.5
+'42' vira 42
+'3,5' vira 3.5
+Código G312: Não foi possível converter o texto "abc" em número.
+Erro na linha 30: A posição 10 está fora dos limites (a lista tem 3 elementos).

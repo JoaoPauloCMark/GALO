@@ -1,0 +1,190 @@
+{
+  "name": "galo-linguagem",
+  "displayName": "GALO — Linguagem de Programação",
+  "description": "Suporte à linguagem GALO: realce de sintaxe, autoindentação, snippets, diagnósticos via LSP e comandos para executar e compilar programas (inclusive servidores web e código para o navegador).",
+  "version": "0.2.0",
+  "publisher": "galo",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "galo",
+    "português",
+    "linguagem",
+    "compilador"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:galo",
+    "workspaceContains:**/*.galo"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "galo",
+        "aliases": [
+          "GALO",
+          "galo"
+        ],
+        "extensions": [
+          ".galo"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "galo",
+        "scopeName": "source.galo",
+        "path": "./syntaxes/galo.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "galo",
+        "path": "./snippets/galo.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "galo.executar",
+        "title": "Executar arquivo",
+        "category": "GALO",
+        "icon": "$(play)"
+      },
+      {
+        "command": "galo.compilar",
+        "title": "Compilar para bytecode (.galoc)",
+        "category": "GALO"
+      },
+      {
+        "command": "galo.rodarCompilado",
+        "title": "Compilar e rodar o bytecode",
+        "category": "GALO"
+      },
+      {
+        "command": "galo.verificar",
+        "title": "Verificar erros",
+        "category": "GALO"
+      },
+      {
+        "command": "galo.abrirRepl",
+        "title": "Abrir modo interativo (REPL)",
+        "category": "GALO"
+      },
+      {
+        "command": "galo.reiniciarServidor",
+        "title": "Reiniciar servidor de linguagem",
+        "category": "GALO"
+      }
+    ],
+    "menus": {
+      "editor/title/run": [
+        {
+          "command": "galo.executar",
+          "when": "editorLangId == galo"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "galo.executar",
+          "when": "editorLangId == galo"
+        },
+        {
+          "command": "galo.compilar",
+          "when": "editorLangId == galo"
+        },
+        {
+          "command": "galo.rodarCompilado",
+          "when": "editorLangId == galo"
+        },
+        {
+          "command": "galo.verificar",
+          "when": "editorLangId == galo"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "GALO",
+      "properties": {
+        "galo.caminhoExecutavel": {
+          "type": "string",
+          "default": "galo",
+          "description": "Comando usado para chamar a GALO (por exemplo: galo, ou o caminho completo do executável)."
+        },
+        "galo.lsp.habilitado": {
+          "type": "boolean",
+          "default": true,
+          "description": "Inicia o servidor de linguagem (galo lsp) para mostrar erros enquanto você digita."
+        }
+      }
+    },
+    "taskDefinitions": [
+      {
+        "type": "galo",
+        "required": [
+          "comando"
+        ],
+        "properties": {
+          "comando": {
+            "type": "string",
+            "enum": [
+              "executar",
+              "compilar",
+              "verificar"
+            ],
+            "description": "Ação da GALO a ser executada."
+          },
+          "arquivo": {
+            "type": "string",
+            "description": "Arquivo .galo (padrão: o arquivo aberto no editor)."
+          }
+        }
+      }
+    ],
+    "problemMatchers": [
+      {
+        "name": "galo",
+        "owner": "galo",
+        "source": "galo",
+        "fileLocation": [
+          "autoDetect",
+          "${workspaceFolder}"
+        ],
+        "severity": "error",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+): erro \\[(G\\d+)\\]: (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "code": 4,
+          "message": 5
+        }
+      },
+      {
+        "name": "galo-aviso",
+        "owner": "galo",
+        "source": "galo",
+        "fileLocation": [
+          "autoDetect",
+          "${workspaceFolder}"
+        ],
+        "severity": "warning",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+): aviso \\[(A\\d+)\\]: (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "code": 4,
+          "message": 5
+        }
+      }
+    ]
+  }
+}

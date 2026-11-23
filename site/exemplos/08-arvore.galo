@@ -1,0 +1,9 @@
+# título: Árvore de estrelas
+# emoji: 🎄
+# descrição: repetir() e um laço desenham uma árvore. Mude a altura e veja crescer!
+defina altura como 7
+para i de 1 até altura faça
+    mostre repetir(" ", altura - i) + repetir("*", 2 * i - 1)
+fim
+mostre repetir(" ", altura - 1) + "‖"
+mostre "Feliz programação! 🎁"

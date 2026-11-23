@@ -1,0 +1,21 @@
+programa "Números primos"
+
+# Crivo de Eratóstenes
+função primos_até(limite como inteiro) retorna lista
+    defina eh_primo como nova_lista(limite + 1, verdadeiro)
+    eh_primo[1] = falso
+    defina resultado como []
+    para n de 2 até limite faça
+        se eh_primo[n + 1] então
+            adicionar(resultado, n)
+            para multiplo de n * n até limite passo n faça
+                eh_primo[multiplo + 1] = falso
+            fim
+        fim
+    fim
+    retorne resultado
+fim
+
+defina primos como primos_até(100)
+mostre "Primos até 100:", primos
+mostre "Quantidade:", tamanho(primos)

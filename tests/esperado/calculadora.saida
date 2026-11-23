@@ -1,0 +1,8 @@
+=== Calculadora GALO ===
+Operadores: + - * / ^   (digite 'sair' para terminar)
+Operador: Primeiro número: Segundo número: Resultado: 2 + 3 = 5
+Operador: Primeiro número: Segundo número: Erro: Não é possível dividir por zero.
+Operador: Primeiro número: "abc" não é um número. Tente de novo.
+Primeiro número: Segundo número: Resultado: 2 ^ 10 = 1024
+Operador: Primeiro número: Segundo número: Resultado: 2.5 * 4 = 10.0
+Operador: Até logo!

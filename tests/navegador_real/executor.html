@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><title>Testes da VM GALO</title></head>
+<body>
+<p id="estado">executando...</p>
+<script src="/_galo/galo.js"></script>
+<script>
+// Executa cada programa compilado na VM do navegador e envia as saídas ao servidor de testes.
+(async () => {
+  const resultados = { __agente: navigator.userAgent, __erros: [] };
+  try {
+    const lista = await (await fetch('/programas.json')).json();
+    for (const p of lista) {
+      let saida = '';
+      const entradas = (p.entradas || []).slice();
+      try {
+        const bytes = await (await fetch(p.arquivo)).arrayBuffer();
+        Galo.executarModulo(Galo.carregar(bytes), {
+          escrever: (t) => { saida += t; },
+          ler: (m) => { saida += m; return entradas.length ? entradas.shift() : null; },
+          aoErro: (e) => { saida += Galo.formatarErro(e) + '\n'; },
+        });
+      } catch (e) {
+        saida += 'FALHA INTERNA: ' + e + '\n' + (e && e.stack);
+      }
+      resultados[p.nome] = saida;
+    }
+    // Erro sem tratador: deve aparecer na caixa de erro da própria página.
+    await Galo.executar('/erro.galoc');
+    const caixa = document.getElementById('galo-erro');
+    resultados.__caixa_de_erro = caixa ? caixa.textContent : null;
+  } catch (e) {
+    resultados.__erros.push(String(e && e.stack || e));
+  }
+  await fetch('/resultado', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(resultados) });
+  document.getElementById('estado').textContent = 'concluído';
+})();
+</script>
+</body>
+</html>

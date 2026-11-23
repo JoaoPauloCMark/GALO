@@ -1,0 +1,59 @@
+# Modelo de dados e acesso ao banco do gerenciador de tarefas.
+
+registro Tarefa
+    id como inteiro
+    título como texto
+    feita como booleano = falso
+    criada_em como texto = data_hora_iso()
+fim
+
+# Toda a conversa com o banco de dados fica aqui: o resto do sistema só vê Tarefas.
+registro RepositorioDeTarefas
+    banco
+
+    função preparar()
+        eu.banco.executar('''
+            CREATE TABLE IF NOT EXISTS tarefas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
+                feita INTEGER NOT NULL DEFAULT 0,
+                criada_em TEXT NOT NULL
+            )
+        ''')
+    fim
+
+    função listar() retorna lista
+        retorne mapear(eu.banco.consultar("SELECT * FROM tarefas ORDER BY id"), para_tarefa)
+    fim
+
+    função buscar(id como inteiro) retorna Tarefa ou nulo
+        defina linha como eu.banco.consultar_um("SELECT * FROM tarefas WHERE id = ?", [id])
+        retorne se linha == nulo então nulo senão para_tarefa(linha)
+    fim
+
+    função criar(título como texto) retorna Tarefa
+        defina tarefa como Tarefa(0, título)
+        tarefa.id = eu.banco.inserir("INSERT INTO tarefas (titulo, feita, criada_em) VALUES (?, ?, ?)",
+                                     [tarefa.título, tarefa.feita, tarefa.criada_em])
+        retorne tarefa
+    fim
+
+    função salvar(tarefa como Tarefa)
+        eu.banco.executar("UPDATE tarefas SET titulo = ?, feita = ? WHERE id = ?",
+                          [tarefa.título, tarefa.feita, tarefa.id])
+    fim
+
+    função remover(id como inteiro) retorna booleano
+        retorne eu.banco.executar("DELETE FROM tarefas WHERE id = ?", [id]) > 0
+    fim
+fim
+
+função para_tarefa(linha) retorna Tarefa
+    retorne Tarefa(linha.id, linha.titulo, linha.feita == 1, linha.criada_em)
+fim
+
+função abrir_repositorio(caminho como texto) retorna RepositorioDeTarefas
+    defina repositorio como RepositorioDeTarefas(abrir_banco(caminho))
+    repositorio.preparar()
+    retorne repositorio
+fim

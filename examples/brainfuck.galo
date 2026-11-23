@@ -1,0 +1,77 @@
+programa "Interpretador de Brainfuck"
+
+#[
+  Brainfuck é uma linguagem mínima, comprovadamente Turing-completa.
+  Se a GALO consegue interpretar qualquer programa Brainfuck, ela consegue
+  computar tudo o que é computável. A fita de memória é uma lista que cresce
+  sempre que o programa avança além do final.
+]#
+
+função executar_bf(codigo como texto, entrada como texto) retorna texto
+    defina instrucoes como caracteres(codigo)
+
+    # Pré-calcula os pares de colchetes [ ]
+    defina pares como {}
+    defina abertos como []
+    para cada indice, simbolo em instrucoes faça
+        se simbolo == "[" então
+            adicionar(abertos, indice)
+        senão se simbolo == "]" então
+            se vazio(abertos) então
+                lance "Colchete ']' sem par na posição {indice}."
+            fim
+            defina abertura como remover(abertos, -1)
+            pares[abertura] = indice
+            pares[indice] = abertura
+        fim
+    fim
+    se não vazio(abertos) então
+        lance "Colchete '[' sem par."
+    fim
+
+    defina fita como [0]
+    defina cabeca como 1
+    defina pc como 1
+    defina lidos como 0
+    defina saida como []
+
+    enquanto pc <= tamanho(instrucoes) faça
+        defina c como instrucoes[pc]
+        se c == ">" então
+            cabeca += 1
+            se cabeca > tamanho(fita) então adicionar(fita, 0) fim
+        senão se c == "<" então
+            se cabeca == 1 então inserir(fita, 1, 0) senão cabeca -= 1 fim
+        senão se c == "+" então
+            fita[cabeca] = (fita[cabeca] + 1) % 256
+        senão se c == "-" então
+            fita[cabeca] = (fita[cabeca] + 255) % 256
+        senão se c == "." então
+            adicionar(saida, caractere(fita[cabeca]))
+        senão se c == "," então
+            lidos += 1
+            fita[cabeca] = se_então_senão(lidos <= tamanho(entrada), lidos, entrada)
+        senão se c == "[" e fita[cabeca] == 0 então
+            pc = pares[pc]
+        senão se c == "]" e fita[cabeca] != 0 então
+            pc = pares[pc]
+        fim
+        pc += 1
+    fim
+    retorne juntar(saida)
+fim
+
+# Lê o caractere n da entrada (0 quando a entrada acabou)
+função se_então_senão(tem_valor como booleano, n como inteiro, entrada como texto) retorna inteiro
+    se tem_valor então
+        retorne código(entrada[n])
+    fim
+    retorne 0
+fim
+
+defina ola como "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."
+escreva(executar_bf(ola, ""))
+
+# Lê a entrada e a devolve invertida
+defina inverte como ">,[>,]<[.<]"
+mostre executar_bf(inverte, "GALO")

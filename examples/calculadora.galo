@@ -1,0 +1,50 @@
+programa "Calculadora"
+
+função ler_numero(mensagem como texto) retorna número
+    enquanto verdadeiro faça
+        defina entrada como leia(mensagem)
+        se entrada == nulo então
+            lance "A entrada terminou antes da hora."
+        fim
+        se é_número(entrada) então
+            retorne número(entrada)
+        fim
+        mostre "\"{entrada}\" não é um número. Tente de novo."
+    fim
+fim
+
+função calcular(a como número, operador como texto, b como número) retorna número
+    se operador == "+" então
+        retorne a + b
+    senão se operador == "-" então
+        retorne a - b
+    senão se operador == "*" então
+        retorne a * b
+    senão se operador == "/" então
+        se b == 0 então
+            lance "Não é possível dividir por zero."
+        fim
+        retorne a / b
+    senão se operador == "^" então
+        retorne a ^ b
+    fim
+    lance "Operador desconhecido: '{operador}'. Use +, -, *, / ou ^."
+fim
+
+mostre "=== Calculadora GALO ==="
+mostre "Operadores: + - * / ^   (digite 'sair' para terminar)"
+
+enquanto verdadeiro faça
+    defina operador como leia("Operador: ")
+    se operador == nulo ou aparar(operador) == "sair" então
+        pare
+    fim
+    defina a como ler_numero("Primeiro número: ")
+    defina b como ler_numero("Segundo número: ")
+    tente
+        mostre "Resultado: {a} {aparar(operador)} {b} = {calcular(a, aparar(operador), b)}"
+    capture erro
+        mostre "Erro: {erro.mensagem}"
+    fim
+fim
+mostre "Até logo!"

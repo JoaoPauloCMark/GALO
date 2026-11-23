@@ -1,0 +1,58 @@
+{% inclua "partes/cabeca.html" %}
+<main>
+  <div class="conteiner">
+    <div class="painel-cabecalho">
+      <div>
+        <h1>Painel ao vivo</h1>
+        <p>Dois painéis, uma linguagem: uma simulação divertida e os seus números no Experimente.
+           Os gráficos são SVG desenhado por GALO, no seu navegador.</p>
+      </div>
+      <span class="ao-vivo" id="relogio">ao vivo</span>
+    </div>
+
+    <section class="bloco-painel" aria-labelledby="titulo-cafeteria">
+      <div class="bloco-titulo">
+        <h2 id="titulo-cafeteria">☕ Cafeteria ao vivo</h2>
+        <p>Simulação: cada segundo e meio são 15 minutos de movimento. <b id="hora-cafeteria"></b></p>
+      </div>
+      <div class="grade-kpis">
+        <div class="kpi"><div class="kpi-rotulo">☕ Xícaras hoje</div><div class="kpi-valor" id="kpi-xicaras">–</div><div class="kpi-detalhe" id="kpi-xicaras-detalhe">&nbsp;</div></div>
+        <div class="kpi"><div class="kpi-rotulo">🌡️ Máquina de espresso</div><div class="kpi-valor" id="kpi-temperatura">–</div><div class="kpi-detalhe" id="kpi-temperatura-detalhe">&nbsp;</div><div id="kpi-temperatura-faisca"></div></div>
+        <div class="kpi"><div class="kpi-rotulo">🫘 Grãos no moedor</div><div class="kpi-valor" id="kpi-graos">–</div><div class="barra-progresso"><span id="kpi-graos-barra" style="width:0%"></span></div></div>
+        <div class="kpi"><div class="kpi-rotulo">😊 Satisfação</div><div class="kpi-valor" id="kpi-satisfacao">–</div><div class="kpi-detalhe" id="kpi-fila">&nbsp;</div></div>
+      </div>
+      <div class="grade-graficos">
+        <div class="cartao cartao-grafico"><h3>Temperatura da máquina</h3><div class="sub">últimas 10 horas, em °C (o ponto ideal é entre 88 °C e 96 °C)</div><div id="grafico-temperatura"></div></div>
+        <div class="cartao cartao-grafico"><h3>Xícaras por dia</h3><div class="sub">nesta semana</div><div id="grafico-xicaras"></div></div>
+      </div>
+      <div class="grade-3">
+        <div class="cartao cartao-grafico"><h3>Categorias</h3><div class="sub">xícaras servidas de cada tipo</div><div id="grafico-categorias"></div><ul class="legenda" id="legenda-categorias"></ul></div>
+        <div class="cartao cartao-grafico"><h3>Mais pedidas</h3><div class="sub">as 5 bebidas favoritas</div><ol class="ranking" id="ranking"></ol></div>
+        <div class="cartao cartao-grafico"><h3>Acontecendo agora</h3><div class="sub">registro de eventos</div><ul class="eventos" id="eventos"></ul></div>
+      </div>
+    </section>
+
+    <section class="bloco-painel" aria-labelledby="titulo-seus">
+      <div class="bloco-titulo">
+        <h2 id="titulo-seus">📊 Seus números</h2>
+        <p>O que você fez no Experimente e nos exemplos.
+           <button class="botao botao-fantasma botao-pequeno" id="apagar-numeros" type="button">Apagar meus números</button></p>
+      </div>
+      <div class="grade-kpis">
+        <div class="kpi"><div class="kpi-rotulo">▶ Programas executados</div><div class="kpi-valor" id="st-execucoes">–</div><div class="kpi-detalhe" id="st-linhas">&nbsp;</div></div>
+        <div class="kpi"><div class="kpi-rotulo">✅ Rodaram sem erro</div><div class="kpi-valor" id="st-sucesso">–</div><div class="kpi-detalhe" id="st-tempo">&nbsp;</div></div>
+        <div class="kpi"><div class="kpi-rotulo">🩹 Erros encontrados</div><div class="kpi-valor" id="st-erros">–</div><div class="kpi-detalhe" id="st-erros-detalhe">&nbsp;</div></div>
+        <div class="kpi"><div class="kpi-rotulo">🔗 Links compartilhados</div><div class="kpi-valor" id="st-compartilhados">–</div><div class="kpi-detalhe">criados no Experimente</div></div>
+      </div>
+      <div class="grade-graficos">
+        <div class="cartao cartao-grafico"><h3>Suas execuções por hora</h3><div class="sub">últimas 24 horas</div><div id="grafico-horas"><p class="vazio">Carregando…</p></div></div>
+        <div class="cartao cartao-grafico"><h3>Seus erros mais comuns</h3><div class="sub">de compilação e de execução</div><ul class="lista-erros" id="lista-erros"><li class="vazio">Carregando…</li></ul></div>
+      </div>
+      <div class="cartao cartao-grafico">
+        <h3>Suas palavras-chave favoritas</h3><div class="sub">em todos os programas que você executou</div>
+        <div class="nuvem" id="nuvem"><span>…</span></div>
+      </div>
+    </section>
+  </div>
+</main>
+{% inclua "partes/rodape.html" %}

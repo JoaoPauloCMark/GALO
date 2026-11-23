@@ -1,0 +1,9 @@
+programa "Gerenciador de tarefas"
+# Execute com:  galo executar examples/tarefas/servidor.galo
+# e abra http://localhost:8000 no navegador.
+importe criar_app de "api.galo"
+importe abrir_repositorio de "modelos.galo"
+
+defina porta como inteiro(variável_ambiente("PORTA", "8000"))
+defina repositorio como abrir_repositorio(variável_ambiente("BANCO", "tarefas.db"))
+criar_app(repositorio).iniciar(porta)

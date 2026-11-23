@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Galo, o mascote da linguagem GALO">
+  <defs>
+    <linearGradient id="g-corpo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf8"/>
+      <stop offset="1" stop-color="#ffe9d1"/>
+    </linearGradient>
+    <linearGradient id="g-crista" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff5a5f"/>
+      <stop offset="1" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="g-cauda1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fb7185"/>
+      <stop offset="1" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="g-cauda2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fdba74"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+    <linearGradient id="g-cauda3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <!-- sombra -->
+  <ellipse cx="112" cy="205" rx="52" ry="7" fill="#78350f" opacity=".12"/>
+  <!-- cauda -->
+  <path d="M70 128 C30 120 18 78 34 46 C52 70 64 92 82 112 Z" fill="url(#g-cauda1)"/>
+  <path d="M72 136 C34 142 12 112 14 82 C36 100 56 112 84 124 Z" fill="url(#g-cauda2)"/>
+  <path d="M78 144 C46 160 20 146 14 124 C40 132 60 134 88 134 Z" fill="url(#g-cauda3)"/>
+  <!-- pernas -->
+  <g stroke="#f59e0b" stroke-width="6" stroke-linecap="round" fill="none">
+    <path d="M100 172 L98 198 M98 198 L88 202 M98 198 L106 203"/>
+    <path d="M126 172 L128 198 M128 198 L120 203 M128 198 L138 202"/>
+  </g>
+  <!-- corpo -->
+  <path d="M60 128 C60 92 92 78 120 84 C130 70 128 56 132 46 C150 38 176 50 174 80 C172 100 162 104 164 120
+           C168 160 138 182 108 180 C78 178 60 158 60 128 Z" fill="url(#g-corpo)"/>
+  <!-- asa -->
+  <path d="M80 128 C86 108 112 104 128 118 C124 142 104 154 82 148 C78 142 78 134 80 128 Z" fill="#fed7aa"/>
+  <path d="M92 132 C102 126 112 126 120 130" stroke="#fdba74" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M90 141 C100 136 108 136 116 139" stroke="#fdba74" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <!-- crista -->
+  <path d="M128 50 C122 34 134 22 144 32 C146 18 164 18 164 34 C174 28 186 38 178 50 C164 54 142 56 128 50 Z" fill="url(#g-crista)"/>
+  <!-- bico -->
+  <path d="M172 66 L196 74 L172 84 Z" fill="#f59e0b"/>
+  <path d="M172 75 L196 74 L172 84 Z" fill="#d97706"/>
+  <!-- barbela -->
+  <path d="M170 86 C180 90 180 106 170 108 C162 106 162 92 170 86 Z" fill="url(#g-crista)"/>
+  <!-- olho -->
+  <circle cx="156" cy="64" r="7.5" fill="#1c1917"/>
+  <circle cx="158.6" cy="61.4" r="2.6" fill="#ffffff"/>
+  <!-- bochecha -->
+  <circle cx="148" cy="82" r="7" fill="#fda4af" opacity=".55"/>
+</svg>

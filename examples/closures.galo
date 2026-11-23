@@ -1,0 +1,28 @@
+programa "Funções que lembram"
+
+# Uma função criada dentro de outra "lembra" das variáveis do lugar onde nasceu.
+função criar_contador(inicio como inteiro)
+    defina atual como inicio
+    retorne função()
+        atual += 1
+        retorne atual
+    fim
+fim
+
+defina a como criar_contador(0)
+defina b como criar_contador(100)
+a()
+a()
+mostre "a:", a(), "| b:", b()
+
+função somador(n)
+    retorne função(x) retorne x + n fim
+fim
+defina mais_dez como somador(10)
+mostre "mais_dez(5) =", mais_dez(5)
+
+função compor(f, g)
+    retorne função(x) retorne f(g(x)) fim
+fim
+defina dobro_mais_dez como compor(mais_dez, função(x) retorne x * 2 fim)
+mostre "dobro_mais_dez(7) =", dobro_mais_dez(7)

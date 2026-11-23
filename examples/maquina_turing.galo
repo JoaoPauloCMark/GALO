@@ -1,0 +1,83 @@
+programa "Máquina de Turing universal"
+
+#[
+  Este programa demonstra a completude de Turing da GALO: ele simula
+  QUALQUER máquina de Turing descrita por uma tabela de transições.
+
+  * A fita é um mapa (posição -> símbolo) que cresce sem limite para os
+    dois lados: memória expansível.
+  * O laço 'enquanto' roda até a máquina parar, sem número de passos
+    fixado de antemão: controle de fluxo ilimitado em princípio.
+]#
+
+# regras: mapa "estado,símbolo" -> [símbolo a escrever, movimento (E/D/N), próximo estado]
+função simular(regras como mapa, estado_inicial como texto, entrada como texto) retorna mapa
+    defina fita como {}
+    para cada i, simbolo em entrada faça
+        fita[i - 1] = simbolo
+    fim
+
+    defina estado como estado_inicial
+    defina cabeca como 0
+    defina passos como 0
+    defina menor como 0
+    defina maior como máximo(tamanho(entrada) - 1, 0)
+
+    enquanto estado != "PARE" faça
+        defina lido como obter(fita, cabeca, "_")
+        defina chave como "{estado},{lido}"
+        se não (chave em regras) então
+            lance "Não há regra para o estado '{estado}' lendo '{lido}'."
+        fim
+        defina acao como regras[chave]
+        fita[cabeca] = acao[1]
+        se acao[2] == "D" então
+            cabeca += 1
+        senão se acao[2] == "E" então
+            cabeca -= 1
+        fim
+        menor = mínimo(menor, cabeca)
+        maior = máximo(maior, cabeca)
+        estado = acao[3]
+        passos += 1
+    fim
+
+    defina celulas como []
+    para p de menor até maior faça
+        adicionar(celulas, obter(fita, p, "_"))
+    fim
+    retorne {"fita": juntar(celulas), "passos": passos, "uns": contar(celulas, "1")}
+fim
+
+# 1) Soma 1 a um número binário.
+defina incremento como {
+    "direita,0": ["0", "D", "direita"],
+    "direita,1": ["1", "D", "direita"],
+    "direita,_": ["_", "E", "soma"],
+    "soma,1": ["0", "E", "soma"],
+    "soma,0": ["1", "N", "PARE"],
+    "soma,_": ["1", "N", "PARE"]
+}
+para cada numero em ["1011", "111", "0"] faça
+    defina r como simular(incremento, "direita", numero)
+    mostre "{numero} + 1 = {aparar(substituir(r.fita, "_", " "))}  ({r.passos} passos)"
+fim
+
+# 2) "Castor atarefado" de 3 estados: escreve 6 uns e para.
+defina castor3 como {
+    "A,_": ["1", "D", "B"], "A,1": ["1", "D", "PARE"],
+    "B,_": ["_", "D", "C"], "B,1": ["1", "D", "B"],
+    "C,_": ["1", "E", "C"], "C,1": ["1", "E", "A"]
+}
+defina r3 como simular(castor3, "A", "")
+mostre "Castor de 3 estados: fita {r3.fita}, {r3.uns} uns em {r3.passos} passos"
+
+# 3) Castor atarefado de 4 estados: 13 uns em 107 passos.
+defina castor4 como {
+    "A,_": ["1", "D", "B"], "A,1": ["1", "E", "B"],
+    "B,_": ["1", "E", "A"], "B,1": ["_", "E", "C"],
+    "C,_": ["1", "D", "PARE"], "C,1": ["1", "E", "D"],
+    "D,_": ["1", "D", "D"], "D,1": ["_", "D", "A"]
+}
+defina r4 como simular(castor4, "A", "")
+mostre "Castor de 4 estados: fita {r4.fita}, {r4.uns} uns em {r4.passos} passos"

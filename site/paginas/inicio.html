@@ -1,0 +1,264 @@
+{% inclua "partes/cabeca.html" %}
+<main>
+  <section class="hero">
+    <div class="conteiner hero-grade">
+      <div>
+        <span class="selo entrar"><b>v{{ versao }}</b> Linguagem completa · bytecode próprio · código aberto</span>
+        <h1 class="entrar entrar-2">Programe em <span class="destaque">português</span>.</h1>
+        <p class="lide entrar entrar-3">
+          GALO é uma linguagem de programação de verdade com palavras que você já conhece —
+          <code>se</code>, <code>enquanto</code>, <code>para cada</code>, <code>função</code> — e mensagens de
+          erro que explicam o que fazer. Do primeiro “Olá, mundo” a um sistema web completo.
+        </p>
+        <div class="hero-acoes entrar entrar-4">
+          <a class="botao" href="/experimente">Experimente no navegador →</a>
+          <a class="botao botao-fantasma" href="#exemplos">Ver exemplos</a>
+        </div>
+        <p class="hero-nota entrar entrar-4">Este site inteiro — servidor, páginas e interface — foi escrito em GALO.</p>
+      </div>
+      <div class="hero-visual entrar entrar-3">
+        <img class="mascote" src="/estatico/galo.svg" alt="O galo, mascote da linguagem GALO" width="150" height="150">
+        <div class="janela-codigo vitrine" id="vitrine" data-programas="{{ vitrine_json }}">
+          <div class="janela-barra">
+            <span class="bolinha vermelha"></span><span class="bolinha amarela"></span><span class="bolinha verde"></span>
+            <span class="janela-titulo" id="vitrine-arquivo">{{ vitrine_arquivo }}</span>
+            <span class="janela-selo">roda de verdade no seu navegador</span>
+          </div>
+          <pre class="codigo"><code id="vitrine-codigo">{{{ vitrine_html }}}</code><span class="cursor"></span></pre>
+          <div class="janela-saida">
+            <div class="saida-rotulo">▶ saída</div>
+            <pre id="vitrine-saida">{{ vitrine_saida }}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="conteiner faixa-numeros">
+    <div class="numero"><strong>{{ numeros.palavras_chave }}</strong><span>palavras-chave, todas em português</span></div>
+    <div class="numero"><strong>{{ numeros.funcoes }}</strong><span>funções internas prontas para usar</span></div>
+    <div class="numero"><strong>2</strong><span>máquinas virtuais: servidor e navegador</span></div>
+    <div class="numero"><strong>0</strong><span>dependências para instalar</span></div>
+  </div>
+
+  <section class="secao" id="recursos">
+    <div class="conteiner">
+      <div class="cabecalho-secao">
+        <span class="sobretitulo">Por que GALO?</span>
+        <h2>Feita para ser lida em voz alta</h2>
+        <p>Tal qual uma torcida no Brasil grita GALO em voz alta e todo mundo entende, a ideia é esta:
+           claro, direto, lido em alto e bom tom pra qualquer um entender.</p>
+      </div>
+      <div class="recursos">
+        <article class="recurso">
+          <div class="icone">🇧🇷</div>
+          <h3>Palavras que você já conhece</h3>
+          <p><code>defina</code>, <code>se</code>…<code>então</code>, <code>enquanto</code>, <code>para cada</code>,
+             <code>retorne</code>. Acentos são opcionais: <code>então</code> e <code>entao</code> valem igual.</p>
+        </article>
+        <article class="recurso">
+          <div class="icone">🩹</div>
+          <h3>Erros que ensinam</h3>
+          <p>Toda mensagem diz o que aconteceu, a linha e a coluna — e sugere a correção,
+             como “você quis dizer <code>nome</code>?”.</p>
+        </article>
+        <article class="recurso">
+          <div class="icone">♾️</div>
+          <h3>Números sem surpresa</h3>
+          <p>Inteiros de qualquer tamanho (<code>2 ^ 1000</code> é exato) e funções matemáticas
+             com o mesmo resultado, bit a bit, em qualquer sistema.</p>
+        </article>
+        <article class="recurso">
+          <div class="icone">🌐</div>
+          <h3>Servidor e navegador</h3>
+          <p>O mesmo bytecode roda no servidor e na página. Dois lados, uma linguagem —
+             testada no Chrome, Firefox, Edge e Safari (WebKit).</p>
+        </article>
+        <article class="recurso">
+          <div class="icone">🧰</div>
+          <h3>Baterias incluídas</h3>
+          <p>Servidor web, banco SQLite, JSON, modelos HTML, segurança e testes automatizados —
+             tudo na biblioteca padrão.</p>
+        </article>
+        <article class="recurso">
+          <div class="icone">🧩</div>
+          <h3>Editor de verdade</h3>
+          <p>Extensão para VS Code com realce de sintaxe, autocompletar, documentação ao passar
+             o mouse e erros sublinhados enquanto você digita.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao secao-alternada">
+    <div class="conteiner duas-colunas">
+      <div>
+        <span class="sobretitulo">Erros que ensinam</span>
+        <h2>O compilador é seu professor particular</h2>
+        <p>Ao lado está uma mensagem de verdade: o servidor deste site acabou de compilar um
+           programa com um nome digitado errado. Repare na posição exata e na sugestão.</p>
+        <ul class="lista-checks">
+          <li>Erros léxicos, de sintaxe, de significado e de execução, cada um com seu código</li>
+          <li>Linha, coluna e um trecho do código apontando o problema</li>
+          <li>Sugestões concretas, em português, para corrigir</li>
+          <li>Todos os erros de significado aparecem de uma vez, antes de executar</li>
+        </ul>
+      </div>
+      <div class="janela-codigo terminal">
+        <div class="janela-barra">
+          <span class="bolinha vermelha"></span><span class="bolinha amarela"></span><span class="bolinha verde"></span>
+          <span class="janela-titulo">$ galo executar boas_vindas.galo</span>
+        </div>
+        <pre><span class="linha-erro">{{ erro.titulo }}</span>
+{{ erro.corpo }}<span class="linha-sugestao">{{ erro.sugestao }}</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="exemplos">
+    <div class="conteiner">
+      <div class="cabecalho-secao">
+        <span class="sobretitulo">Exemplos</span>
+        <h2>Pequenos programas, grandes sorrisos</h2>
+        <p>Escolha um exemplo e execute aqui mesmo: o servidor GALO compila e o seu navegador
+           executa, num espaço isolado.</p>
+      </div>
+      <div class="exemplos">
+        <div class="abas" role="tablist" aria-label="Exemplos">
+          {% para cada ex em exemplos %}<button class="aba {{ ex.classe }}" type="button" role="tab" data-id="{{ ex.id }}"><span>{{ ex.emoji }}</span>{{ ex.titulo }}</button>
+          {% fim %}
+        </div>
+        <div>
+          {% para cada ex em exemplos %}
+          <article class="exemplo {{ ex.classe }}" data-id="{{ ex.id }}" role="tabpanel">
+            <header>
+              <h3>{{ ex.emoji }} {{ ex.titulo }}</h3>
+              <p>{{ ex.descricao }}</p>
+            </header>
+            <div class="janela-codigo">
+              <div class="janela-barra">
+                <span class="bolinha vermelha"></span><span class="bolinha amarela"></span><span class="bolinha verde"></span>
+                <span class="janela-titulo">{{ ex.arquivo }}</span>
+              </div>
+              <pre class="codigo"><code>{{{ ex.html }}}</code></pre>
+            </div>
+            <textarea class="fonte" hidden>{{ ex.codigo }}</textarea>
+            <textarea class="entradas-exemplo" hidden>{{ ex.entradas_texto }}</textarea>
+            <div class="acoes">
+              <button class="botao executar-exemplo" type="button">▶ Executar</button>
+              <a class="botao botao-fantasma" href="/experimente?exemplo={{ ex.id }}">Abrir no Experimente →</a>
+            </div>
+            <div class="console" hidden>
+              <div class="console-topo"><span>saída</span><span class="status">pronto</span></div>
+              <pre class="console-saida"></pre>
+              <div class="erros"></div>
+            </div>
+          </article>
+          {% fim %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao secao-alternada" id="demos">
+    <div class="conteiner">
+      <div class="cabecalho-secao">
+        <span class="sobretitulo">Feito em GALO</span>
+        <h2>Brinquedos de verdade, escritos na linguagem</h2>
+        <p>A calculadora lê a sua expressão com um analisador escrito em GALO. O painel simula uma
+           cafeteria movimentada — e desenha os gráficos em SVG, também em GALO.</p>
+      </div>
+      <div class="demos">
+        <div class="cartao calculadora" id="calculadora" tabindex="0" aria-label="Calculadora">
+          <div class="cartao-cabecalho"><h3>🧮 Calculadora</h3><span class="etiqueta">inteiros sem limite</span></div>
+          <div class="calc-tela" aria-live="polite">
+            <div class="calc-expressao" id="calc-expressao">2 ^ 100</div>
+            <div class="calc-resultado" id="calc-resultado">1.267.650.600.228.229.401.496.703.205.376</div>
+          </div>
+          <div class="calc-teclas">
+            <button class="tecla fn" data-tecla="C" type="button">C</button>
+            <button class="tecla fn" data-tecla="⌫" type="button" aria-label="Apagar">⌫</button>
+            <button class="tecla fn" data-tecla="(" type="button">(</button>
+            <button class="tecla fn" data-tecla=")" type="button">)</button>
+            <button class="tecla fn" data-tecla="√" type="button">√</button>
+            <button class="tecla fn" data-tecla="π" type="button">π</button>
+            <button class="tecla op" data-tecla="^" type="button">xʸ</button>
+            <button class="tecla op" data-tecla="÷" type="button">÷</button>
+            <button class="tecla" data-tecla="7" type="button">7</button>
+            <button class="tecla" data-tecla="8" type="button">8</button>
+            <button class="tecla" data-tecla="9" type="button">9</button>
+            <button class="tecla op" data-tecla="×" type="button">×</button>
+            <button class="tecla" data-tecla="4" type="button">4</button>
+            <button class="tecla" data-tecla="5" type="button">5</button>
+            <button class="tecla" data-tecla="6" type="button">6</button>
+            <button class="tecla op" data-tecla="−" type="button">−</button>
+            <button class="tecla" data-tecla="1" type="button">1</button>
+            <button class="tecla" data-tecla="2" type="button">2</button>
+            <button class="tecla" data-tecla="3" type="button">3</button>
+            <button class="tecla op" data-tecla="+" type="button">+</button>
+            <button class="tecla" data-tecla="0" type="button">0</button>
+            <button class="tecla" data-tecla="," type="button">,</button>
+            <button class="tecla fn" data-tecla="%" type="button">%</button>
+            <button class="tecla igual" data-tecla="=" type="button">=</button>
+          </div>
+          <p class="dica">Dica: dá para usar o teclado. Experimente <code>2 ^ 200</code> ou <code>0,1 + 0,2</code>.</p>
+          <ul class="calc-historico" id="calc-historico" aria-label="Histórico"></ul>
+        </div>
+        <div class="cartao mini-painel">
+          <div class="cartao-cabecalho"><h3>☕ Cafeteria ao vivo</h3><span class="ao-vivo">ao vivo</span></div>
+          <div class="mini-kpis">
+            <div class="kpi"><div class="kpi-rotulo">☕ Xícaras hoje</div><div class="kpi-valor" id="mini-xicaras">–</div></div>
+            <div class="kpi"><div class="kpi-rotulo">🌡️ Máquina</div><div class="kpi-valor" id="mini-temperatura">–</div></div>
+            <div class="kpi"><div class="kpi-rotulo">😊 Satisfação</div><div class="kpi-valor" id="mini-satisfacao">–</div></div>
+          </div>
+          <div class="mini-grafico" id="mini-grafico"></div>
+          <div class="rodape-cartao"><span id="mini-hora">Hora na cafeteria: –</span><a href="/painel">Abrir o painel completo →</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="secao" id="comecar">
+    <div class="conteiner">
+      <div class="cabecalho-secao">
+        <span class="sobretitulo">Comece agora</span>
+        <h2>Do zero ao primeiro programa em um minuto</h2>
+        <p>Só precisa do Python 3.10 ou mais novo. Nenhuma outra dependência.</p>
+      </div>
+      <div class="passos">
+        <div class="cartao passo">
+          <h3>Instale</h3>
+          <p>Na pasta do projeto GALO:</p>
+          <code class="comando"><span class="prompt">$ </span>pip install .</code>
+          <p style="margin-top:10px">ou, sem pip: <code>./instalar.sh</code></p>
+        </div>
+        <div class="cartao passo">
+          <h3>Escreva</h3>
+          <p>Crie o arquivo <code>ola.galo</code>:</p>
+          <code class="comando">mostre "Olá, mundo! 🐓"</code>
+        </div>
+        <div class="cartao passo">
+          <h3>Execute</h3>
+          <p>E veja a mágica (que não é mágica):</p>
+          <code class="comando"><span class="prompt">$ </span>galo executar ola.galo</code>
+          <p style="margin-top:10px">Use também <code>galo repl</code> para conversar com a linguagem.</p>
+        </div>
+      </div>
+
+      <div class="faixa-site">
+        <div>
+          <span class="sobretitulo">Este site é a prova</span>
+          <h2>{{ numeros.linhas_site }} linhas de GALO, {{ numeros.arquivos_site }} arquivos</h2>
+          <p>O servidor web, o banco de dados, as páginas, o realce de sintaxe, a calculadora, os gráficos
+             e o “Experimente” são programas GALO. Leia o código na pasta <code>site/</code> do projeto.</p>
+          <a class="botao" href="/experimente">Escreva o seu →</a>
+        </div>
+        <ul class="arquivos-site">
+          {% para cada arq em arquivos_site %}<li><span>{{ arq.nome }}</span><span>{{ arq.linhas }} linhas</span></li>
+          {% fim %}
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+{% inclua "partes/rodape.html" %}

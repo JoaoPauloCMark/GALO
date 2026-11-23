@@ -1,0 +1,27 @@
+defina lista como elemento("#lista")
+defina campo como elemento("#novo")
+
+função adicionar_item(texto como texto)
+    defina li como criar_elemento("li", texto)
+    li.adicionar_classe("item")
+    li.ao("clique", função()
+        li.alternar_classe("feito")
+        mostre "clicou em", li.texto, li.tem_classe("feito")
+    fim)
+    lista.adicionar(li)
+    armazenar("itens", mapear(elementos(".item"), função(el) retorne el.texto fim))
+fim
+
+elemento("#form").ao("envio", função(evento)
+    mostre "evento:", evento.tipo, evento.alvo.etiqueta
+    adicionar_item(campo.valor)
+    campo.valor = ""
+fim)
+
+adicionar_item("primeiro")
+mostre tamanho(elementos(".item")), lista.texto, elemento("#nao-existe"), recuperar("itens"), recuperar("x", 0)
+buscar("/api/tarefas", {"método": "POST", "json": {"título": "x"}}, função(r)
+    mostre "resposta:", r.status, r.ok, r.json.método, r.json.corpo
+fim)
+buscar("/falha", nulo, função(r) mostre "falha:", r.status, r.ok fim)
+mostre "depois das chamadas assíncronas"

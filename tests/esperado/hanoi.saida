@@ -1,0 +1,9 @@
+Mover disco 1 de A para C
+Mover disco 2 de A para B
+Mover disco 1 de C para B
+Mover disco 3 de A para C
+Mover disco 1 de B para A
+Mover disco 2 de B para C
+Mover disco 1 de A para C
+Total de movimentos com 3 discos: 7
+Total de movimentos com 15 discos: 32767 (2^15 - 1 = 32767)

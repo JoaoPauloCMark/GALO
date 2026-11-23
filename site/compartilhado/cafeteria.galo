@@ -1,0 +1,203 @@
+# Cafeteria ao vivo: uma simulação divertida para o painel.
+#
+# Todo o estado fica num registro; avançar() simula 15 minutos de movimento: clientes chegam e
+# pedem bebidas, a fila cresce e diminui, a máquina de espresso esquenta e esfria, o moedor gasta
+# grãos. Com a mesma semente, a simulação é igual no servidor e no navegador.
+
+constante DIAS como ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"]
+constante ABRE como 7          # horário de funcionamento: das 7h às 20h
+constante FECHA como 20
+constante CLIENTES como ["Ana", "Bruno", "Carla", "Diego", "Eva", "Fábio", "Gabi", "Heitor", "Íris", "João",
+    "Luana", "Marcos", "Nina", "Otávio", "Paula", "Rafa", "Sofia", "Tiago", "Vera", "Yuri"]
+
+registro Bebida(nome como texto, categoria como texto, preço como decimal, vendidas como inteiro = 0)
+
+registro Cafeteria
+    cardápio como lista
+    temperaturas como lista = []                  # máquina de espresso, em °C
+    vendas_semana como lista = [0, 0, 0, 0, 0, 0, 0]
+    grãos como decimal = 100.0                     # moedor, em %
+    fila como inteiro = 0
+    satisfação como decimal = 96.0                 # em %
+    faturamento como decimal = 0.0                 # de hoje, em R$
+    minuto como inteiro = 6 * 60 + 30              # a simulação começa às 6h30
+    eventos como lista = []
+
+    função temperatura_atual() retorna decimal
+        retorne último(eu.temperaturas)
+    fim
+
+    função vendidas_hoje() retorna inteiro
+        retorne último(eu.vendas_semana)
+    fim
+
+    função hora_do_dia() retorna inteiro
+        retorne (eu.minuto // 60) % 24
+    fim
+
+    função aberta() retorna booleano
+        retorne eu.hora_do_dia() >= ABRE e eu.hora_do_dia() < FECHA
+    fim
+
+    função hora() retorna texto
+        defina h como eu.hora_do_dia()
+        defina m como eu.minuto % 60
+        retorne (se h < 10 então "0" senão "") + texto(h) + ":" + (se m < 10 então "0" senão "") + texto(m)
+    fim
+
+    função anotar(ícone como texto, mensagem como texto)
+        inserir(eu.eventos, 1, {"hora": eu.hora(), "ícone": ícone, "mensagem": mensagem})
+        se tamanho(eu.eventos) > 7 então
+            remover(eu.eventos, 8)
+        fim
+    fim
+
+    # Bebidas da mais pedida para a menos pedida.
+    função ranking() retorna lista
+        retorne inverter(ordenar_por(eu.cardápio, função(b) retorne b.vendidas fim))
+    fim
+
+    # Quantas xícaras saíram de cada categoria (Cafés, Com leite, Gelados, Chás).
+    função por_categoria() retorna mapa
+        defina contagem como {}
+        para cada b em eu.cardápio faça
+            contagem[b.categoria] = obter(contagem, b.categoria, 0) + b.vendidas
+        fim
+        retorne contagem
+    fim
+fim
+
+função _limitar(x, menor, maior)
+    retorne máximo(menor, mínimo(maior, x))
+fim
+
+função nova_cafeteria(semente como inteiro) retorna Cafeteria
+    semente_aleatória(semente)
+    defina cardápio como [
+        Bebida("Espresso", "Cafés", 6.5), Bebida("Coado", "Cafés", 5.0), Bebida("Pingado", "Com leite", 6.0),
+        Bebida("Cappuccino", "Com leite", 9.5), Bebida("Latte", "Com leite", 10.0), Bebida("Mocha", "Com leite", 11.0),
+        Bebida("Café gelado", "Gelados", 12.0), Bebida("Frappé", "Gelados", 14.0),
+        Bebida("Chá mate", "Chás", 6.0), Bebida("Chá de hibisco", "Chás", 7.0)
+    ]
+    defina histórico como {"Com leite": [50, 110], "Cafés": [40, 90], "Gelados": [15, 60], "Chás": [10, 35]}
+    para cada b em cardápio faça
+        b.vendidas = aleatório_entre(histórico[b.categoria][1], histórico[b.categoria][2])
+    fim
+    defina c como Cafeteria(cardápio)
+    # uma semana de história, para os gráficos já começarem cheios
+    para d de 1 até 6 faça
+        c.vendas_semana[d] = aleatório_entre(85, 130)
+    fim
+    defina t como 88.0
+    repita 40 vezes
+        t = _limitar(t + (aleatório() - 0.5) * 1.6, 84.0, 96.0)
+        adicionar(c.temperaturas, arredondar(t, 1))
+    fim
+    c.anotar("🌙", "Cafeteria fechada. A máquina está em modo econômico.")
+    retorne c
+fim
+
+# Movimento de clientes: mais gente no café da manhã, no almoço e no fim da tarde.
+função _pedidos_por_vez(hora como inteiro) retorna inteiro
+    se hora == 7 ou hora == 8 ou hora == 12 ou hora == 13 ou hora == 17 então
+        retorne aleatório_entre(2, 5)
+    fim
+    retorne aleatório_entre(0, 2)
+fim
+
+# Escolhe a categoria pelo gosto da clientela e depois uma bebida dela. À tarde (das 13h às
+# 17h) os gelados fazem mais sucesso.
+função _escolher_bebida(c como Cafeteria) retorna Bebida
+    defina tarde como c.hora_do_dia() >= 13 e c.hora_do_dia() < 17
+    defina sorteio como aleatório()
+    defina categoria como "Chás"
+    se sorteio < 0.40 então
+        categoria = "Com leite"
+    senão se sorteio < 0.70 então
+        categoria = "Cafés"
+    senão se sorteio < (se tarde então 0.95 senão 0.85) então
+        categoria = "Gelados"
+    fim
+    defina opções como filtrar(c.cardápio, função(b) retorne b.categoria == categoria fim)
+    retorne opções[aleatório_entre(1, tamanho(opções))]
+fim
+
+# Avança a simulação em 15 minutos.
+função avançar(c como Cafeteria)
+    defina estava_aberta como c.aberta()
+    c.minuto += 15
+    se c.minuto % (24 * 60) == 0 então
+        # meia-noite: a semana anda uma casa e o caixa do dia zera
+        remover(c.vendas_semana, 1)
+        adicionar(c.vendas_semana, 0)
+        c.faturamento = 0.0
+    fim
+    se c.aberta() e não estava_aberta então
+        c.anotar("☀️", "Bom dia! A cafeteria abriu.")
+    senão se estava_aberta e não c.aberta() então
+        c.fila = 0
+        c.anotar("🌙", "Fechamos por hoje. Caixa: R$ " + substituir(formatar(c.faturamento, 2), ".", ","))
+    fim
+
+    # a máquina fica perto de 93 °C aberta e esfria para 86 °C fechada, com algum acaso
+    defina alvo como se c.aberta() então 93.0 senão 86.0
+    defina agora_t como c.temperatura_atual()
+    defina nova como _limitar(agora_t + (alvo - agora_t) * 0.3 + (aleatório() - 0.5) * 2.2, 80.0, 99.0)
+    se c.aberta() e aleatório() < 0.05 então
+        nova = 98.0
+        c.anotar("🌡️", "A máquina passou do ponto (98 °C) — ajustando.")
+    fim
+    adicionar(c.temperaturas, arredondar(nova, 1))
+    se tamanho(c.temperaturas) > 40 então
+        remover(c.temperaturas, 1)
+    fim
+
+    se não c.aberta() então
+        retorne
+    fim
+
+    # pedidos
+    defina pedidos como _pedidos_por_vez(c.hora_do_dia())
+    repita pedidos vezes
+        defina bebida como _escolher_bebida(c)
+        bebida.vendidas += 1
+        c.vendas_semana[7] += 1
+        c.faturamento += bebida.preço
+        se bebida.categoria != "Chás" então
+            c.grãos = _limitar(c.grãos - (aleatório() * 1.5 + 0.5), 0.0, 100.0)
+        fim
+    fim
+    se pedidos > 0 e aleatório() < 0.6 então
+        defina cliente como CLIENTES[aleatório_entre(1, tamanho(CLIENTES))]
+        defina pedida como _escolher_bebida(c)
+        c.anotar("☕", "{pedida.nome} para {cliente}!")
+    fim
+    se c.grãos < 15 então
+        c.grãos = 100.0
+        c.anotar("🫘", "Moedor reabastecido com grãos fresquinhos.")
+    fim
+
+    # fila e satisfação: fila grande e café fora do ponto deixam a clientela menos feliz
+    c.fila = _limitar(c.fila + aleatório_entre(-2, 2) + (se pedidos >= 3 então 1 senão 0), 0, 9)
+    defina fora_do_ponto como nova < 88 ou nova > 96
+    defina meta como 100.0 - c.fila * 4.0 - (se fora_do_ponto então 12.0 senão 0.0)
+    c.satisfação = arredondar(_limitar(c.satisfação + (meta - c.satisfação) * 0.4, 40.0, 100.0), 1)
+    se c.fila >= 7 e aleatório() < 0.5 então
+        c.anotar("⏳", "Fila de {c.fila} pessoas — chamando reforço no balcão.")
+    fim
+fim
+
+# Rótulos dos últimos 7 dias, terminando em "hoje". `hoje` é o dia_da_semana de agora().
+função dias_da_semana(hoje como texto) retorna lista
+    defina prefixo como substituir(fatia(minúsculas(hoje), 1, 3), "á", "a")
+    defina i como posição(["dom", "seg", "ter", "qua", "qui", "sex", "sab"], prefixo)
+    se i == nulo então
+        i = 1
+    fim
+    defina rótulos como []
+    para k de 6 até 1 faça
+        adicionar(rótulos, DIAS[((i - 1 - k) % 7) + 1])
+    fim
+    adicionar(rótulos, "hoje")
+    retorne rótulos
+fim

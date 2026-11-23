@@ -1,0 +1,10 @@
+1 primeiro nulo ["primeiro"] 0
+depois das chamadas assíncronas
+evento: submit form
+envio cancelado: true
+clicou em primeiro verdadeiro
+classes do primeiro: item feito
+itens: primeiro, segundo | campo: ""
+armazenado: ["primeiro","segundo"]
+resposta: 200 verdadeiro POST {"título":"x"}
+falha: 404 falso

@@ -1,0 +1,19 @@
+programa "Meu Primeiro GALO"
+
+defina nome como "João"
+defina idade como 22
+
+mostre "Olá, {nome}!"
+
+se idade >= 18 então
+    mostre "Você é maior de idade."
+senão
+    mostre "Você é menor de idade."
+fim
+
+defina contador como 1
+
+enquanto contador <= 3 faça
+    mostre "Contagem: {contador}"
+    contador = contador + 1
+fim

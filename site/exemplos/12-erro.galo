@@ -1,0 +1,7 @@
+# título: Erros que ensinam
+# emoji: 🩹
+# descrição: Execute e veja: a mensagem diz o que aconteceu, em que linha, e como resolver.
+defina frutas como ["maçã", "banana", "caju"]
+mostre "A primeira fruta é", frutas[1]
+mostre "A última fruta é", frutas[-1]
+mostre "A quarta fruta é", frutas[4]

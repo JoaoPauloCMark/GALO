@@ -1,0 +1,70 @@
+{% inclua "partes/cabeca.html" %}
+<main class="experimente">
+  <div class="conteiner-largo">
+    <div class="aviso-topo" id="aviso-link" hidden>🔗 Programa recebido por link. Edite à vontade: o link original não muda.</div>
+    <div class="exp-cabecalho">
+      <div>
+        <h1>Experimente a GALO</h1>
+        <p>Escreva, execute e compartilhe — sem instalar nada. O servidor compila; o seu navegador executa.</p>
+      </div>
+      <div class="exp-acoes">
+        <label class="seletor"><span>Exemplo</span>
+          <select id="seletor-exemplo">
+            <option value="">Escolha…</option>
+            {% para cada ex em exemplos %}<option value="{{ ex.id }}">{{ ex.emoji }} {{ ex.titulo }}</option>
+            {% fim %}
+          </select>
+        </label>
+        <button class="botao botao-fantasma" id="botao-compartilhar" type="button">🔗 Compartilhar</button>
+        <button class="botao" id="botao-executar" type="button">▶ Executar <kbd>Ctrl ↵</kbd></button>
+      </div>
+    </div>
+
+    <div class="exp-grade">
+      <section class="cartao editor-cartao" aria-label="Editor">
+        <div class="editor-topo">
+          <span class="bolinha vermelha"></span><span class="bolinha amarela"></span><span class="bolinha verde"></span>
+          <span class="janela-titulo">programa.galo</span>
+          <span id="editor-info">–</span>
+        </div>
+        <div class="editor" id="editor">
+          <pre class="linhas-editor" id="numeros" aria-hidden="true">1</pre>
+          <div class="area">
+            <pre class="realce" aria-hidden="true"><code id="realce"></code></pre>
+            <textarea id="codigo" spellcheck="false" wrap="off" autocapitalize="off" autocomplete="off"
+                      aria-label="Código GALO" data-restaurar="{{ restaurar }}">{{ codigo_inicial }}</textarea>
+            <div class="marca-erro" id="marca-erro" hidden></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="lado">
+        <div class="cartao console-cartao">
+          <div class="console-topo"><span>Saída</span><span class="status" id="status">pronto</span></div>
+          <pre class="console-saida" id="saida">Clique em ▶ Executar (ou aperte Ctrl + Enter no editor).</pre>
+          <div id="erros"></div>
+        </div>
+        <div class="cartao compartilhado" id="compartilhado" hidden>
+          <strong>Link criado! O programa vai dentro do próprio link — nada fica guardado no servidor:</strong>
+          <input id="link" readonly aria-label="Link do programa">
+          <a id="abrir-link" href="#">Abrir em uma nova aba ↗</a>
+        </div>
+        <details class="cartao entradas">
+          <summary>⌨️ Entradas para <code>leia()</code></summary>
+          <textarea id="entradas" placeholder="Uma resposta por linha" aria-label="Entradas">{{ entradas_iniciais }}</textarea>
+        </details>
+        <div class="cartao dicas">
+          <h3>💡 Dicas rápidas</h3>
+          <ul>
+            <li><code>mostre</code> escreve na saída; <code>leia()</code> usa as entradas acima.</li>
+            <li>Textos com chaves interpolam: <code>"Olá, {nome}!"</code></li>
+            <li>Listas começam na posição 1: <code>lista[1]</code></li>
+            <li>Programas que passam de 5 segundos são interrompidos.</li>
+            <li>O código fica salvo neste navegador enquanto você digita.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</main>
+{% inclua "partes/rodape.html" %}

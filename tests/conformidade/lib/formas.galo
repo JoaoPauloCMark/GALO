@@ -1,0 +1,26 @@
+# Módulo usado pelos testes de conformidade.
+registro Ponto(x como número, y como número = 0)
+
+registro Retângulo
+    canto como Ponto
+    largura como número
+    altura como número = largura
+
+    função área() retorna número
+        retorne eu.largura * eu.altura
+    fim
+
+    função escalar(fator como número = 2)
+        eu.largura *= fator
+        eu.altura *= fator
+        retorne eu
+    fim
+fim
+
+defina _privado como 1
+defina contador_de_criações como 0
+
+função novo_quadrado(lado como número) retorna Retângulo
+    contador_de_criações += 1
+    retorne Retângulo(Ponto(0, 0), lado)
+fim

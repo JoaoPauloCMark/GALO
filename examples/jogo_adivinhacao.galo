@@ -1,0 +1,32 @@
+programa "Jogo de adivinhação"
+
+# Para tornar o jogo reproduzível, passe uma semente: galo executar jogo_adivinhacao.galo 42
+se tamanho(argumentos()) > 0 então
+    semente_aleatória(inteiro(argumentos()[1]))
+fim
+
+defina secreto como aleatório_entre(1, 100)
+defina tentativas como 0
+mostre "Pensei em um número de 1 a 100. Consegue adivinhar?"
+
+enquanto verdadeiro faça
+    defina palpite como leia("Seu palpite: ")
+    se palpite == nulo então
+        mostre "\nO número era {secreto}."
+        pare
+    fim
+    se não é_número(palpite) então
+        mostre "Digite um número."
+        continue
+    fim
+    defina n como inteiro(número(palpite))
+    tentativas += 1
+    se n < secreto então
+        mostre "Mais alto!"
+    senão se n > secreto então
+        mostre "Mais baixo!"
+    senão
+        mostre "Acertou em {tentativas} tentativa(s)!"
+        pare
+    fim
+fim

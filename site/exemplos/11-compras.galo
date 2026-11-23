@@ -1,0 +1,14 @@
+# título: Lista de compras
+# emoji: 🛒
+# descrição: Funções são valores: mapear, filtrar e reduzir numa lista de compras bem brasileira.
+defina compras como [
+    {"item": "pão de queijo", "preço": 12.9, "quantidade": 2},
+    {"item": "café", "preço": 18.5, "quantidade": 1},
+    {"item": "goiabada", "preço": 7.25, "quantidade": 3},
+    {"item": "queijo minas", "preço": 32.0, "quantidade": 1}
+]
+defina total como reduzir(compras, função(soma, c) retorne soma + c.preço * c.quantidade fim, 0)
+defina caros como filtrar(compras, função(c) retorne c.preço > 15 fim)
+mostre "Itens:", juntar(mapear(compras, função(c) retorne c.item fim), ", ")
+mostre "Mais de R$ 15:", juntar(mapear(caros, função(c) retorne c.item fim), " e ")
+mostre "Total: R$", substituir(formatar(total, 2), ".", ",")

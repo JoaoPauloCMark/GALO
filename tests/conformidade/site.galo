@@ -1,0 +1,58 @@
+# Conformidade dos módulos do site (site/compartilhado): eles rodam no servidor e no navegador,
+# então a saída precisa ser idêntica nas duas VMs e em todos os navegadores — inclusive as
+# expressões regulares do realce de sintaxe.
+
+importe realçar, contar_palavras_chave de "../../site/compartilhado/realce.galo"
+importe calcular de "../../site/compartilhado/calculadora.galo"
+importe "../../site/compartilhado/graficos.galo" como graficos
+importe "../../site/compartilhado/cafeteria.galo" como cafeteria
+importe "../../site/compartilhado/link.galo" como link
+importe "../../site/compartilhado/estatisticas.galo" como estatísticas
+
+para cada arquivo_exemplo em ['''# comentário com "aspas" e {chaves}
+defina nome como "Ana {1 + 2} \"x\" \{literal\}"
+se idade >= 18.5e3 então mostre tamanho(lista), Ponto(1, 2), lista[-1] fim
+#[ bloco
+   de várias linhas ]# x = 'cru {a}' ; """multi
+{nome} linhas"""
+registro Conta(titular como texto, saldo como decimal = 0)
+entao senao funcao faca até passo cada 1_000 0.5 2e-3 🐓 ação + - * / // % ^ == != <= >= < >''',
+    "mostre \"aberto", "'''sem fim", "#[ sem fim", "", "   \n\t\n"] faça
+    mostre realçar(arquivo_exemplo)
+    mostre contar_palavras_chave(arquivo_exemplo)
+fim
+
+para cada conta em ["1 + 2 × 3", "(1 + 2) × 3", "0,1 + 0,2", "2 ^ 100", "10 ÷ 4", "-2 ^ 2", "2 ^ -1", "2(3 + 1)",
+                    "√16", "√2", "2π", "50%", "1 ÷ 0", "(1 + 2", "1 + 2)", "3,4,5", "1 +", "abc", "", "1234567,891",
+                    "0,00001234", "10 ^ 20 ÷ 3", "(-8) ^ 0,5", "2 ^ 3 ^ 2", "123456789 × 987654321", "-5 + 2,5",
+                    "9 ^ 0,5", "1 ÷ 3", "2 ^ 0,5 × 2 ^ 0,5", "π × 2 ^ 64", "1e5", "3 √ 9", "((2))^((3))"] faça
+    defina r como calcular(conta)
+    mostre conta, "=>", se r.ok então r.texto senão "erro: " + r.mensagem
+fim
+
+mostre graficos.linha([20, 21.5, 23, 22.1, 24, 19.75], "t1", unidade: "°C", mín_fixo: 10)
+mostre graficos.barras(["seg", "ter", "<b>"], [3, 7, 0], destaque: 2)
+mostre graficos.rosca([{"rótulo": "A", "valor": 3, "cor": "#f00"}, {"rótulo": "B & C", "valor": 1, "cor": "#0f0"}], "xícaras", "4")
+mostre graficos.faísca([1, 3, 2, 2.5])
+
+defina c como cafeteria.nova_cafeteria(2026)
+repita 300 vezes
+    cafeteria.avançar(c)
+fim
+mostre c.hora(), c.aberta(), c.temperaturas, c.vendas_semana, formatar(c.grãos, 3), c.fila, c.satisfação, formatar(c.faturamento, 2)
+mostre mapear(c.ranking(), função(x) retorne x.nome + ":" + texto(x.vendidas) fim), c.por_categoria()
+mostre c.eventos
+
+para cada programa_link em ["mostre \"olá, ação! 🐓\"", "# </script> + / = ?", "", "a", repetir("ç", 50)] faça
+    defina endereço como link.endereço_do_programa("https://galo.exemplo.com/experimente?x=1#codigo=antigo", programa_link)
+    mostre endereço, link.código_do_endereço(endereço) == programa_link
+fim
+mostre link.decodificar_link("!!!"), link.decodificar_link("a"), link.decodificar_link("YQ"), link.código_do_endereço("sem link")
+
+# horários fixos, para a saída não depender da hora em que o teste roda
+defina est como estatísticas.completar({"execuções": "estragado", "erros": {"G201": 2}})
+estatísticas.registrar(est, "mostre x\nmostre y", "compilação", "G201", nulo, {"mostre": 2}, 1800000000)
+estatísticas.registrar(est, "mostre 1", "execução", nulo, 3.5, {"mostre": 1, "se": 1}, 1800000000 - 3600)
+estatísticas.registrar(est, "mostre [1][2]", "execução", "G304", 1, {"mostre": 1}, 1800000000 - 100000)
+mostre est
+mostre estatísticas.resumo(est, 1800000000 + 60)

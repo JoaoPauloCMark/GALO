@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ titulo }}</title>
+<meta name="description" content="{{ descricao }}">
+<meta name="theme-color" content="#fffbf5">
+<link rel="icon" href="/estatico/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/estatico/estilo.css">
+</head>
+<body>
+<header class="topo">
+  <div class="conteiner topo-linha">
+    <a class="marca" href="/" aria-label="GALO — página inicial"><img src="/estatico/galo.svg" alt="" width="38" height="38"><span>GALO</span></a>
+    <button class="menu-botao" id="menu-botao" type="button" aria-label="Abrir o menu" aria-expanded="false" aria-controls="menu">☰</button>
+    <nav class="menu" id="menu" aria-label="Principal">
+      <a href="/#recursos">Recursos</a>
+      <a href="/#exemplos">Exemplos</a>
+      <a href="/experimente" class="{{ ativo_experimente }}">Experimente</a>
+      <a href="/painel" class="{{ ativo_painel }}">Painel ao vivo</a>
+      <a href="/#comecar" class="botao botao-pequeno">Instalar</a>
+    </nav>
+  </div>
+</header>

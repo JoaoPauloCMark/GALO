@@ -1,0 +1,42 @@
+programa "Algoritmos de ordenação"
+
+função quicksort(lista como lista) retorna lista
+    se tamanho(lista) <= 1 então
+        retorne lista
+    fim
+    defina pivo como lista[1]
+    defina resto como fatia(lista, 2)
+    defina menores como filtrar(resto, função(x) retorne x < pivo fim)
+    defina maiores como filtrar(resto, função(x) retorne x >= pivo fim)
+    retorne quicksort(menores) + [pivo] + quicksort(maiores)
+fim
+
+função mesclar(a como lista, b como lista) retorna lista
+    defina resultado como []
+    defina i como 1
+    defina j como 1
+    enquanto i <= tamanho(a) e j <= tamanho(b) faça
+        se a[i] <= b[j] então
+            adicionar(resultado, a[i])
+            i += 1
+        senão
+            adicionar(resultado, b[j])
+            j += 1
+        fim
+    fim
+    retorne resultado + fatia(a, i) + fatia(b, j)
+fim
+
+função merge_sort(lista como lista) retorna lista
+    se tamanho(lista) <= 1 então
+        retorne lista
+    fim
+    defina meio como tamanho(lista) // 2
+    retorne mesclar(merge_sort(fatia(lista, 1, meio)), merge_sort(fatia(lista, meio + 1)))
+fim
+
+defina dados como [38, 27, 43, 3, 9, 82, 10, 3]
+mostre "Original:  ", dados
+mostre "Quicksort: ", quicksort(dados)
+mostre "Merge sort:", merge_sort(dados)
+mostre "Textos:    ", quicksort(["pera", "uva", "abacaxi", "maçã"])

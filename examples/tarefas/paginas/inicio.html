@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titulo }}</title>
+  <link rel="icon" href="/estatico/icone.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/estatico/estilo.css">
+</head>
+<body>
+  <main>
+    <h1>🐓 {{ titulo }}</h1>
+    <p id="resumo">{{ total }} tarefa(s), {{ pendentes }} pendente(s)</p>
+    <form id="nova-tarefa">
+      <input id="titulo" placeholder="O que precisa ser feito?" autocomplete="off" required>
+      <button>Adicionar</button>
+    </form>
+    <ul id="tarefas">
+      {% para cada t em tarefas %}
+      <li{% se t.feita %} class="feita"{% fim %}><span>{{ t.título }}</span></li>
+      {% fim %}
+    </ul>
+    {% se não tem_tarefas %}<p class="vazio">Nenhuma tarefa ainda. Que tal criar a primeira?</p>{% fim %}
+    <footer>Servidor, banco de dados e interface escritos em GALO.</footer>
+  </main>
+  <script src="/_galo/galo.js"></script>
+  <script type="application/galo" src="/app.galoc"></script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+# Painel ao vivo (roda no navegador): a cafeteria simulada e os números de quem visita
+# (guardados só no navegador, pelo módulo comum.galo).
+# Os gráficos são textos SVG montados pelo módulo compartilhado/graficos.galo.
+
+importe "../compartilhado/cafeteria.galo" como cafeteria
+importe linha, barras, rosca, faísca de "../compartilhado/graficos.galo"
+importe "../compartilhado/estatisticas.galo" como estatísticas
+importe "comum.galo" como comum
+
+comum.ativar_menu()
+
+constante CORES como ["#92400e", "#f97316", "#2563eb", "#16a34a", "#e11d48", "#7c3aed"]
+
+função vírgula(x, casas como inteiro) retorna texto
+    retorne substituir(formatar(x, casas), ".", ",")
+fim
+
+função milhar(n como inteiro) retorna texto
+    defina cs como caracteres(texto(n))
+    defina saída como ""
+    para cada i, c em cs faça
+        se i > 1 e (tamanho(cs) - i + 1) % 3 == 0 então
+            saída += "."
+        fim
+        saída += c
+    fim
+    retorne saída
+fim
+
+função pôr(seletor como texto, valor)
+    elemento(seletor).texto = texto(valor)
+fim
+
+# ------------------------------------------------------------------ cafeteria
+
+defina c como cafeteria.nova_cafeteria(aleatório_entre(1, 1000000))
+defina dias como cafeteria.dias_da_semana(agora().dia_da_semana)
+
+função desenhar_cafeteria()
+    defina temperatura como c.temperatura_atual()
+    defina anterior como c.temperaturas[-2]
+    pôr("#hora-cafeteria", "Agora são {c.hora()} — " + (se c.aberta() então "aberta." senão "fechada."))
+    pôr("#kpi-xicaras", c.vendidas_hoje())
+    pôr("#kpi-xicaras-detalhe", "ontem: {c.vendas_semana[6]} · caixa: R$ " + vírgula(c.faturamento, 2))
+    pôr("#kpi-temperatura", vírgula(temperatura, 1) + " °C")
+    defina tendência como se temperatura > anterior então "▲ subindo" senão se temperatura < anterior então "▼ caindo" senão "estável"
+    defina ponto como se temperatura >= 88 e temperatura <= 96 então "no ponto" senão "fora do ponto"
+    pôr("#kpi-temperatura-detalhe", tendência + " · " + ponto)
+    elemento("#kpi-temperatura-faisca").html = faísca(fatia(c.temperaturas, -12), "#92400e")
+    pôr("#kpi-graos", vírgula(c.grãos, 0) + "%")
+    elemento("#kpi-graos-barra").estilo("width", formatar(c.grãos, 1) + "%")
+    pôr("#kpi-satisfacao", vírgula(c.satisfação, 0) + "%")
+    pôr("#kpi-fila", se c.aberta() então "fila agora: {c.fila} pessoa(s)" senão "volte amanhã às 7h")
+
+    elemento("#grafico-temperatura").html = linha(c.temperaturas, "grad-temperatura", cor: "#92400e", unidade: "°", mín_fixo: 80, máx_fixo: 100)
+    elemento("#grafico-xicaras").html = barras(dias, c.vendas_semana, cor: "#c2410c", destaque: 7, cor_destaque: "#f97316", largura: 400, altura: 250)
+
+    # categorias: rosca com legenda
+    defina fatias como []
+    defina legenda como ""
+    defina categorias como c.por_categoria()
+    defina total como 0
+    para cada i, categoria em chaves(categorias) faça
+        defina cor como CORES[((i - 1) % tamanho(CORES)) + 1]
+        defina quantas como categorias[categoria]
+        total += quantas
+        adicionar(fatias, {"rótulo": categoria, "valor": quantas, "cor": cor})
+        legenda += "<li><i style=\"background:{cor}\"></i>" + escapar_html(categoria) + "<b>{quantas}</b></li>"
+    fim
+    elemento("#grafico-categorias").html = rosca(fatias, "xícaras", milhar(total))
+    elemento("#legenda-categorias").html = legenda
+
+    # as 5 bebidas mais pedidas
+    defina ranking como fatia(c.ranking(), 1, 5)
+    defina recorde como máximo(ranking[1].vendidas, 1)
+    defina html como ""
+    para cada i, bebida em ranking faça
+        defina largura como formatar(bebida.vendidas * 100 / recorde, 1)
+        html += "<li><span class=\"pos\">{i}</span><span class=\"nome\">" + escapar_html(bebida.nome) + "</span>"
+        html += "<b>{bebida.vendidas} ☕</b><div class=\"trilho\"><span style=\"width:{largura}%\"></span></div></li>"
+    fim
+    elemento("#ranking").html = html
+
+    defina eventos como ""
+    para cada ev em c.eventos faça
+        eventos += "<li><time>{ev.hora}</time><span>{ev.ícone}</span><span>" + escapar_html(ev.mensagem) + "</span></li>"
+    fim
+    elemento("#eventos").html = eventos
+fim
+
+desenhar_cafeteria()
+a_cada(1500, função()
+    cafeteria.avançar(c)
+    desenhar_cafeteria()
+fim)
+
+a_cada(1000, função()
+    pôr("#relogio", "ao vivo · " + hora_atual())
+fim)
+
+# ------------------------------------------------------------------ seus números (neste navegador)
+
+defina DESCRIÇÕES como {
+    "G102": "faltou uma palavra ou símbolo", "G103": "bloco sem fim", "G104": "fim sobrando",
+    "G105": "faltou um valor", "G106": "comando desconhecido", "G201": "nome não definido",
+    "G204": "nome repetido num bloco interno", "G210": "argumentos errados", "G213": "tipo incompatível",
+    "G215": "condição não booleana", "G220": "importe não permitido", "G301": "variável sem valor",
+    "G302": "operação inválida", "G303": "divisão por zero", "G304": "posição fora da lista",
+    "G305": "chave inexistente", "G307": "argumentos errados", "G310": "condição não booleana",
+    "G311": "recursão profunda demais", "G312": "conversão impossível", "G322": "argumento inválido",
+    "G330": "passou do tempo", "G331": "saída grande demais", "G400": "erro lançado pelo programa"
+}
+
+função desenhar_estatísticas(st)
+    pôr("#st-execucoes", milhar(st.execuções))
+    pôr("#st-linhas", "{milhar(st.linhas)} linhas compiladas")
+    defina executadas como st.sucessos + st.erros_execução
+    se executadas > 0 então
+        pôr("#st-sucesso", vírgula(st.sucessos * 100 / executadas, 0) + "%")
+    senão
+        pôr("#st-sucesso", "–")
+    fim
+    pôr("#st-tempo", "tempo médio: {vírgula(st.tempo_médio_ms, 1)} ms")
+    pôr("#st-erros", milhar(st.erros_compilação + st.erros_execução))
+    pôr("#st-erros-detalhe", "{st.erros_compilação} de compilação · {st.erros_execução} de execução")
+    pôr("#st-compartilhados", milhar(st.compartilhados))
+
+    defina horas como mapear(st.por_hora, função(h) retorne h.hora fim)
+    defina quantidades como mapear(st.por_hora, função(h) retorne h.quantidade fim)
+    se soma(quantidades) == 0 então
+        elemento("#grafico-horas").html = "<p class=\"vazio\">Você ainda não executou nada nas últimas 24 horas. <a href=\"/experimente\">Que tal agora?</a></p>"
+    senão
+        defina rótulos como mapear(intervalo(1, tamanho(horas)), função(i)
+            retorne se i % 3 == 0 ou i == tamanho(horas) então horas[i] + "h" senão ""
+        fim)
+        elemento("#grafico-horas").html = barras(rótulos, quantidades, destaque: tamanho(quantidades))
+    fim
+
+    se tamanho(st.erros) == 0 então
+        elemento("#lista-erros").html = "<li class=\"vazio\">Nenhum erro até agora. 🎉</li>"
+    senão
+        defina maior como st.erros[1].quantidade
+        defina html como ""
+        para cada e_ em st.erros faça
+            defina largura como formatar(e_.quantidade * 100 / maior, 1)
+            defina descrição como obter(DESCRIÇÕES, e_.codigo, "")
+            html += "<li><span class=\"erro-codigo\">" + escapar_html(e_.codigo) + "</span>"
+            html += "<div><div>" + escapar_html(descrição) + "</div><div class=\"trilho\"><span style=\"width:{largura}%\"></span></div></div>"
+            html += "<b>{e_.quantidade}</b></li>"
+        fim
+        elemento("#lista-erros").html = html
+    fim
+
+    se tamanho(st.palavras) == 0 então
+        elemento("#nuvem").html = "<span>ainda nenhuma — execute um programa no Experimente</span>"
+    senão
+        defina html como ""
+        defina maior como st.palavras[1].usos
+        para cada p em st.palavras faça
+            defina tamanho_fonte como formatar(0.85 + 0.75 * p.usos / maior, 2)
+            html += "<span style=\"font-size:{tamanho_fonte}rem\">" + escapar_html(p.palavra) + "<small>{p.usos}</small></span>"
+        fim
+        elemento("#nuvem").html = html
+    fim
+fim
+
+função atualizar_meus_números()
+    desenhar_estatísticas(estatísticas.resumo(comum.ler_estatísticas(), tempo()))
+fim
+
+atualizar_meus_números()
+a_cada(3000, atualizar_meus_números)     # outra aba pode ter executado programas
+
+elemento("#apagar-numeros").ao("clique", função()
+    se confirmar("Apagar os seus números guardados neste navegador?") então
+        comum.apagar_estatísticas()
+        atualizar_meus_números()
+    fim
+fim)
+
+# Interface montada (usado pelos testes para saber que a página está pronta).
+elemento("body").definir_atributo("data-pronto", "sim")

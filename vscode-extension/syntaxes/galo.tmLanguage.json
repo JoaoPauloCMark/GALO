@@ -1,0 +1,257 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "GALO",
+  "scopeName": "source.galo",
+  "fileTypes": [
+    "galo"
+  ],
+  "patterns": [
+    {
+      "include": "#comentarios"
+    },
+    {
+      "include": "#textos"
+    },
+    {
+      "include": "#numeros"
+    },
+    {
+      "include": "#declaracao-de-funcao"
+    },
+    {
+      "include": "#declaracao-de-registro"
+    },
+    {
+      "include": "#palavras-chave"
+    },
+    {
+      "include": "#internas"
+    },
+    {
+      "include": "#chamadas"
+    },
+    {
+      "include": "#operadores"
+    }
+  ],
+  "repository": {
+    "comentarios": {
+      "patterns": [
+        {
+          "include": "#comentario-de-bloco"
+        },
+        {
+          "name": "comment.line.number-sign.galo",
+          "match": "#(?!\\[).*$"
+        }
+      ]
+    },
+    "comentario-de-bloco": {
+      "name": "comment.block.galo",
+      "begin": "#\\[",
+      "end": "\\]#",
+      "patterns": [
+        {
+          "include": "#comentario-de-bloco"
+        }
+      ]
+    },
+    "textos": {
+      "patterns": [
+        {
+          "include": "#texto-multilinha"
+        },
+        {
+          "include": "#texto-literal-multilinha"
+        },
+        {
+          "include": "#texto-literal"
+        },
+        {
+          "include": "#texto-simples"
+        }
+      ]
+    },
+    "texto-literal": {
+      "name": "string.quoted.single.galo",
+      "begin": "'",
+      "end": "'|$",
+      "patterns": [
+        {
+          "name": "constant.character.escape.galo",
+          "match": "\\\\'"
+        }
+      ]
+    },
+    "texto-literal-multilinha": {
+      "name": "string.quoted.single.block.galo",
+      "begin": "'''",
+      "end": "'''",
+      "patterns": [
+        {
+          "name": "constant.character.escape.galo",
+          "match": "\\\\'"
+        }
+      ]
+    },
+    "texto-multilinha": {
+      "name": "string.quoted.double.block.galo",
+      "begin": "\"\"\"",
+      "end": "\"\"\"",
+      "patterns": [
+        {
+          "include": "#conteudo-de-texto"
+        }
+      ]
+    },
+    "texto-simples": {
+      "name": "string.quoted.double.galo",
+      "begin": "\"",
+      "end": "\"|$",
+      "patterns": [
+        {
+          "include": "#conteudo-de-texto"
+        }
+      ]
+    },
+    "conteudo-de-texto": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.galo",
+          "match": "\\\\(?:[ntr0\"\\\\{}]|u[0-9a-fA-F]{4})"
+        },
+        {
+          "name": "invalid.illegal.escape.galo",
+          "match": "\\\\."
+        },
+        {
+          "name": "meta.interpolation.galo",
+          "begin": "\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.section.interpolation.begin.galo"
+            }
+          },
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.section.interpolation.end.galo"
+            }
+          },
+          "contentName": "source.galo.embedded",
+          "patterns": [
+            {
+              "include": "$self"
+            }
+          ]
+        }
+      ]
+    },
+    "declaracao-de-registro": {
+      "match": "(?<![\\p{L}\\p{N}_])(registro)(?![\\p{L}\\p{N}_])\\s+([\\p{L}_][\\p{L}\\p{N}_]*)",
+      "captures": {
+        "1": {
+          "name": "storage.type.class.galo"
+        },
+        "2": {
+          "name": "entity.name.type.galo"
+        }
+      }
+    },
+    "numeros": {
+      "name": "constant.numeric.galo",
+      "match": "(?<![\\p{L}_])\\d[\\d_]*(?:\\.\\d[\\d_]*)?(?:[eE][+-]?\\d+)?"
+    },
+    "declaracao-de-funcao": {
+      "match": "(?<![\\p{L}\\p{N}_])(função|funcao)(?![\\p{L}\\p{N}_])\\s+([\\p{L}_][\\p{L}\\p{N}_]*)",
+      "captures": {
+        "1": {
+          "name": "storage.type.function.galo"
+        },
+        "2": {
+          "name": "entity.name.function.galo"
+        }
+      }
+    },
+    "palavras-chave": {
+      "patterns": [
+        {
+          "name": "keyword.control.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:continue|enquanto|capture|retorne|repita|entao|então|lance|passo|senao|senão|tente|vezes|cada|faca|faça|para|pare|ate|até|fim|de|em|se)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "storage.type.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:constante|registro|defina|funcao|função)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "keyword.other.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:programa|importe|retorna|mostre|como)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "keyword.other.type-annotation.galo",
+          "match": "(?<![\\p{L}\\p{N}_])do\\s+tipo(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "keyword.operator.logical.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:nao|não|ou|e)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "constant.language.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:verdadeiro|falso|nulo)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "variable.language.self.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:eu)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "support.type.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:booleano|qualquer|decimal|inteiro|numero|número|lista|texto|mapa)(?![\\p{L}\\p{N}_])"
+        },
+        {
+          "name": "support.constant.galo",
+          "match": "(?<![\\p{L}\\p{N}_])(?:pi)(?![\\p{L}\\p{N}_])"
+        }
+      ]
+    },
+    "internas": {
+      "match": "(?<![\\p{L}\\p{N}_])(cancelar_temporizador|decodificar_base64|compilar_programa|executar_programa|semente_aleatoria|semente_aleatória|substituir_padrao|substituir_padrão|variavel_ambiente|variável_ambiente|codificar_base64|escrever_arquivo|aleatorio_entre|aleatório_entre|decodificar_url|listar_arquivos|token_aleatorio|token_aleatório|verificar_senha|anexar_arquivo|apagar_arquivo|arquivo_existe|criar_elemento|criar_servidor|endereco_atual|endereço_atual|procurar_todos|codificar_url|data_hora_iso|remover_chave|remover_valor|resposta_html|resposta_json|escapar_html|redirecionar|abrir_banco|corresponde|ler_arquivo|ordenar_por|termina_com|argumentos|arredondar|caracteres|comeca_com|começa_com|data_atual|hash_senha|hora_atual|ler_linhas|maiusculas|maiúsculas|minusculas|minúsculas|nova_lista|renderizar|requisitar|substituir|adicionar|aleatorio|aleatório|armazenar|caractere|confirmar|elementos|intervalo|logaritmo|para_json|recuperar|absoluto|e_numero|elemento|esquecer|formatar|inverter|potencia|potência|primeiro|resposta|tangente|é_número|afirmar|cosseno|de_json|dividir|escreva|filtrar|inserir|navegar|ordenar|posicao|posição|reduzir|remover|repetir|tamanho|valores|a_cada|alerta|aparar|buscar|chaves|codigo|contar|contem|contém|copiar|código|depois|espere|juntar|limpar|mapear|maximo|minimo|modelo|máximo|mínimo|sha256|ultimo|último|agora|algum|fatia|media|média|obter|pares|tempo|todos|vazio|leia|piso|raiz|sair|seno|soma|teto|tipo|uuid)(?![\\p{L}\\p{N}_])(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "support.function.builtin.galo"
+        }
+      }
+    },
+    "chamadas": {
+      "match": "([\\p{L}_][\\p{L}\\p{N}_]*)(?=\\s*\\()",
+      "captures": {
+        "1": {
+          "name": "entity.name.function.call.galo"
+        }
+      }
+    },
+    "operadores": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.compound.galo",
+          "match": "\\+=|-=|\\*=|/="
+        },
+        {
+          "name": "keyword.operator.comparison.galo",
+          "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.arithmetic.galo",
+          "match": "//|[-+*/%^]"
+        },
+        {
+          "name": "keyword.operator.assignment.galo",
+          "match": "="
+        },
+        {
+          "name": "punctuation.separator.galo",
+          "match": "[,;:.]"
+        }
+      ]
+    }
+  }
+}

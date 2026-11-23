@@ -1,0 +1,156 @@
+# "Experimente" (roda no navegador): editor com realce de sintaxe, execução, exemplos e links
+# para compartilhar. O realce é o mesmo módulo GALO usado pelo servidor na página inicial.
+
+importe realçar de "../compartilhado/realce.galo"
+importe "../compartilhado/link.galo" como link
+importe "comum.galo" como comum
+
+comum.ativar_menu()
+
+constante CHAVE_SALVO como "galo-experimente"
+constante CHAVE_LINK como "galo-ultimo-link"
+
+defina campo como elemento("#codigo")
+defina realce como elemento("#realce")
+defina números como elemento("#numeros")
+defina info como elemento("#editor-info")
+defina marca como elemento("#marca-erro")
+defina saída como elemento("#saida")
+defina erros como elemento("#erros")
+defina situação como elemento("#status")
+defina botão_executar como elemento("#botao-executar")
+defina caixa_entradas como elemento("#entradas")
+defina rodando como falso
+
+função quantas_linhas(código como texto) retorna inteiro
+    retorne tamanho(dividir(código, "\n"))
+fim
+
+função atualizar_editor()
+    defina código como campo.valor
+    defina html como realçar(código)
+    se código == "" ou termina_com(código, "\n") então
+        html += " "
+    fim
+    realce.html = html
+    defina linhas como quantas_linhas(código)
+    números.texto = juntar(intervalo(1, linhas), "\n")
+    info.texto = "{linhas} linha(s) · {tamanho(código)} caractere(s)"
+    marca.definir_atributo("hidden", "")
+fim
+
+função salvar()
+    armazenar(CHAVE_SALVO, campo.valor)
+fim
+
+função entradas() retorna lista
+    defina t como caixa_entradas.valor
+    se aparar(t) == "" então
+        retorne []
+    fim
+    retorne dividir(t, "\n")
+fim
+
+função marcar_linha(linha)
+    se linha == nulo então
+        marca.definir_atributo("hidden", "")
+        retorne
+    fim
+    marca.estilo("--linha", texto(linha))
+    marca.remover_atributo("hidden")
+fim
+
+função executar()
+    se rodando então
+        retorne
+    fim
+    rodando = verdadeiro
+    botão_executar.definir_atributo("disabled", "")
+    comum.mostrar_rodando(saída, erros, situação)
+    comum.rodar_código(campo.valor, "experimente", entradas(), função(resultado)
+        rodando = falso
+        botão_executar.remover_atributo("disabled")
+        comum.mostrar_resultado(resultado, saída, erros, situação)
+        se resultado.fase == "compilação" e tamanho(resultado.erros) > 0 então
+            marcar_linha(resultado.erros[1].linha)
+        senão se resultado.fase == "execução" e resultado.erro != nulo então
+            marcar_linha(resultado.erro.linha)
+        senão
+            marcar_linha(nulo)
+        fim
+    fim)
+fim
+
+# Código inicial: o que veio num link compartilhado (#codigo=...), o exemplo pedido
+# (?exemplo=...) ou, se não houver nenhum dos dois, o que ficou salvo neste navegador.
+defina do_link como link.código_do_endereço(endereço_atual())
+se do_link != nulo e aparar(do_link) != "" então
+    elemento("#aviso-link").remover_atributo("hidden")
+    defina salvo como recuperar(CHAVE_SALVO, nulo)
+    se recuperar(CHAVE_LINK, nulo) == do_link e salvo != nulo então
+        campo.valor = salvo          # já abriu este link antes: mantém o que a pessoa editou
+    senão
+        campo.valor = do_link
+        armazenar(CHAVE_LINK, do_link)
+        salvar()
+    fim
+senão se campo.atributo("data-restaurar") == "sim" então
+    defina salvo como recuperar(CHAVE_SALVO, nulo)
+    se salvo != nulo e aparar(salvo) != "" então
+        campo.valor = salvo
+    fim
+fim
+atualizar_editor()
+
+campo.ao("entrada", função()
+    atualizar_editor()
+    salvar()
+fim)
+
+campo.ao("tecla", função(evento)
+    se evento.tecla == "Enter" e (evento.ctrl ou evento.meta) então
+        executar()
+    fim
+fim)
+
+botão_executar.ao("clique", executar)
+
+elemento("#seletor-exemplo").ao("mudança", função(evento)
+    defina id como evento.valor
+    se id == "" então
+        retorne
+    fim
+    buscar("/api/exemplos", nulo, função(r)
+        se não r.ok então
+            retorne
+        fim
+        para cada ex em r.json faça
+            se ex.id == id então
+                campo.valor = ex.codigo
+                caixa_entradas.valor = juntar(ex.entradas, "\n")
+                atualizar_editor()
+                salvar()
+                saída.texto = "Exemplo “{ex.titulo}” carregado. Clique em ▶ Executar."
+                erros.html = ""
+            fim
+        fim
+    fim)
+fim)
+
+# Compartilhar: o programa vai dentro do próprio link (depois do #); nada fica no servidor.
+elemento("#botao-compartilhar").ao("clique", função()
+    se aparar(campo.valor) == "" então
+        alerta("Escreva um programa antes de compartilhar.")
+        retorne
+    fim
+    defina endereço como link.endereço_do_programa(endereço_atual(), campo.valor)
+    elemento("#link").valor = endereço
+    elemento("#abrir-link").definir_atributo("href", endereço)
+    elemento("#abrir-link").definir_atributo("target", "_blank")
+    elemento("#compartilhado").remover_atributo("hidden")
+    elemento("#link").focar()
+    comum.anotar_compartilhamento()
+fim)
+
+# Interface montada (usado pelos testes para saber que a página está pronta).
+elemento("body").definir_atributo("data-pronto", "sim")

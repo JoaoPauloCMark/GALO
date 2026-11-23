@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "galo-linguagem"
+version = "0.2.0"
+description = "GALO: linguagem de programação em português, com compilador para bytecode e máquina virtual próprios."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Projeto GALO" }]
+keywords = ["linguagem de programação", "compilador", "português", "educação", "máquina virtual"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Other",
+    "Natural Language :: Portuguese (Brazilian)",
+    "Topic :: Software Development :: Compilers",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: Education",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = []
+
+[project.scripts]
+galo = "galo.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["galo*"]
+
+[tool.setuptools.package-data]
+"galo.web" = ["galo.js"]

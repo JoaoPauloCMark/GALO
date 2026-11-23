@@ -1,0 +1,14 @@
+# título: Números gigantes
+# emoji: 🔢
+# descrição: Inteiros não têm limite: nada de estouro, nada de notação científica, todos os algarismos.
+função fatorial(n como inteiro) retorna inteiro
+    se n <= 1 então
+        retorne 1
+    fim
+    retorne n * fatorial(n - 1)
+fim
+
+mostre "2 ^ 100 =", 2 ^ 100
+mostre "30! =", fatorial(30)
+mostre "1000! tem", tamanho(texto(fatorial(1000))), "algarismos"
+mostre "0,1 + 0,2 =", 0.1 + 0.2, "← decimais seguem o padrão IEEE 754"

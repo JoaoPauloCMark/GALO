@@ -1,0 +1,22 @@
+programa "Torre de Hanói"
+
+defina movimentos como 0
+
+função hanoi(discos como inteiro, origem como texto, destino como texto, auxiliar como texto, mostrar como booleano)
+    se discos == 0 então
+        retorne
+    fim
+    hanoi(discos - 1, origem, auxiliar, destino, mostrar)
+    movimentos += 1
+    se mostrar então
+        mostre "Mover disco {discos} de {origem} para {destino}"
+    fim
+    hanoi(discos - 1, auxiliar, destino, origem, mostrar)
+fim
+
+hanoi(3, "A", "C", "B", verdadeiro)
+mostre "Total de movimentos com 3 discos:", movimentos
+
+movimentos = 0
+hanoi(15, "A", "C", "B", falso)
+mostre "Total de movimentos com 15 discos: {movimentos} (2^15 - 1 = {2 ^ 15 - 1})"

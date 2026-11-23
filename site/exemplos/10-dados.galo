@@ -1,0 +1,12 @@
+# título: Dois dados
+# emoji: 🎲
+# descrição: Joga dois dados 3.000 vezes e desenha o histograma das somas. Por que o 7 ganha?
+defina somas como nova_lista(12, 0)
+repita 3000 vezes
+    defina s como aleatório_entre(1, 6) + aleatório_entre(1, 6)
+    somas[s] += 1
+fim
+para s de 2 até 12 faça
+    defina rótulo como (se s < 10 então " " senão "") + texto(s)
+    mostre rótulo, repetir("█", somas[s] // 15), somas[s]
+fim

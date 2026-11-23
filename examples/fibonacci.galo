@@ -1,0 +1,44 @@
+programa "Fibonacci"
+
+# Recursiva (simples, porém lenta para valores grandes)
+função fib(n como inteiro) retorna inteiro
+    se n < 2 então
+        retorne n
+    fim
+    retorne fib(n - 1) + fib(n - 2)
+fim
+
+# Com memória: guarda resultados já calculados em um mapa
+defina memoria como {}
+
+função fib_memo(n como inteiro) retorna inteiro
+    se n < 2 então
+        retorne n
+    fim
+    se n em memoria então
+        retorne memoria[n]
+    fim
+    defina valor como fib_memo(n - 1) + fib_memo(n - 2)
+    memoria[n] = valor
+    retorne valor
+fim
+
+# Iterativa
+função fib_iterativo(n como inteiro) retorna inteiro
+    defina a como 0
+    defina b como 1
+    repita n vezes
+        defina proximo como a + b
+        a = b
+        b = proximo
+    fim
+    retorne a
+fim
+
+defina sequencia como []
+para i de 0 até 15 faça
+    adicionar(sequencia, fib(i))
+fim
+mostre "Primeiros termos:", sequencia
+mostre "fib(90) com memória:", fib_memo(90)
+mostre "fib(200) iterativo:", fib_iterativo(200)

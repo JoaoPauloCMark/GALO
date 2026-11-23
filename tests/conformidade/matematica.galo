@@ -1,0 +1,43 @@
+# Conformidade das funções matemáticas: a saída precisa ser idêntica, dígito por dígito,
+# na VM Python e na VM do navegador (qualquer navegador). seno, cosseno, tangente,
+# logaritmo e potências fracionárias são corretamente arredondados pela própria GALO,
+# sem depender da biblioteca matemática da plataforma.
+
+função tentar(f)
+    tente
+        retorne "{f()}"
+    capture erro
+        retorne "erro {erro.código}"
+    fim
+fim
+
+# casos difíceis conhecidos
+mostre seno(1e22), cosseno(1e22), tangente(1e22)
+mostre seno(1e300), cosseno(5e-324), seno(5e-324), tangente(pi / 2), seno(pi), cosseno(pi / 2)
+mostre seno(-0.0), seno(2.2250738585072014e-308), cosseno(1.7976931348623157e308)
+mostre logaritmo(5e-324), logaritmo(1.7976931348623157e308), logaritmo(1.0000000000000002), logaritmo(0.9999999999999999)
+mostre logaritmo(1000, 10), logaritmo(0.125, 2), logaritmo(2, 4), logaritmo(1e-300, 10), logaritmo(3 ^ 20, 3), logaritmo(10, 0.1)
+mostre 2.25 ^ 0.5, 8 ^ (1 / 3), 2 ^ 0.5, 10 ^ 0.1, 1e22 ^ 0.5, 0.5 ^ 1e3, 1.0000000000000002 ^ 1e15, 7 ^ -2.5
+mostre (-0.5) ^ 1025.0, (-0.99) ^ 1025.0, (-0.99) ^ 2000.0, tentar(função() retorne 2.0 ^ 1024.5 fim), 2.0 ^ -1074.5, 2.0 ^ -1100.5
+mostre raiz(2), raiz(10 ^ 40), raiz(10 ^ 41), tentar(função() retorne raiz(10 ^ 400 + 1) fim), raiz(10 ^ 400)
+mostre tentar(função() retorne seno(10 ^ 400) fim), tentar(função() retorne logaritmo(-1) fim), tentar(função() retorne (-8) ^ (1 / 3) fim)
+
+# entradas sorteadas pelo próprio gerador da GALO (o mesmo nas duas VMs)
+semente_aleatória(2026)
+para i de 1 até 120 faça
+    defina x como (aleatório() - 0.5) * 10 ^ aleatório_entre(-8, 8)
+    defina y como aleatório() * 10 ^ aleatório_entre(-6, 6)
+    mostre i, seno(x), cosseno(x), tangente(x), logaritmo(absoluto(x)), logaritmo(y, 1 + aleatório()), tentar(função() retorne y ^ (x / 7) fim), absoluto(x) ^ 0.5
+fim
+
+# sequência do gerador de números aleatórios
+semente_aleatória(42)
+defina sorteios como []
+para i de 1 até 20 faça
+    adicionar(sorteios, aleatório())
+    adicionar(sorteios, aleatório_entre(-3, 3))
+    adicionar(sorteios, aleatório_entre(1, 10 ^ 30))
+fim
+mostre sorteios
+semente_aleatória(-7)
+mostre aleatório(), aleatório_entre(0, 2 ^ 64), aleatório_entre(5, 5)

@@ -1,0 +1,7 @@
+# título: Olá, mundo
+# emoji: 👋
+# descrição: O primeiro programa de todo mundo — agora perguntando o seu nome com leia().
+# entradas: Ana
+defina nome como leia("Qual é o seu nome? ")
+mostre "Olá, {nome}! Bem-vindo(a) à GALO 🐓"
+mostre "Seu nome tem {tamanho(nome)} letras e, de trás para frente, fica {inverter(nome)}."

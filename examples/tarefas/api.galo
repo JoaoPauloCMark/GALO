@@ -1,0 +1,71 @@
+# Rotas HTTP: a página inicial (renderizada no servidor) e a API JSON usada pelo navegador.
+importe Tarefa, RepositorioDeTarefas de "modelos.galo"
+
+função criar_app(repositorio como RepositorioDeTarefas)
+    defina app como criar_servidor()
+
+    app.get("/", função(pedido)
+        defina tarefas como repositorio.listar()
+        defina pendentes como filtrar(tarefas, função(t) retorne não t.feita fim)
+        retorne renderizar("paginas/inicio.html", {
+            "titulo": "Tarefas GALO",
+            "tarefas": tarefas,
+            "total": tamanho(tarefas),
+            "pendentes": tamanho(pendentes),
+            "tem_tarefas": tamanho(tarefas) > 0
+        })
+    fim)
+
+    app.get("/api/tarefas", função(pedido)
+        retorne repositorio.listar()
+    fim)
+
+    app.post("/api/tarefas", função(pedido)
+        defina dados como pedido.json
+        se tipo(dados) != "mapa" ou não ("título" em dados) então
+            retorne erro_json("Envie um JSON com o campo \"título\".", 400)
+        fim
+        defina título como aparar(texto(dados.título))
+        se título == "" então
+            retorne erro_json("O título não pode ser vazio.", 422)
+        fim
+        retorne resposta_json(repositorio.criar(título), 201)
+    fim)
+
+    app.patch("/api/tarefas/<id:inteiro>", função(pedido)
+        defina tarefa como repositorio.buscar(pedido.parâmetros.id)
+        se tarefa == nulo então
+            retorne erro_json("Tarefa não encontrada.", 404)
+        fim
+        defina dados como pedido.json
+        se tipo(dados) != "mapa" então
+            retorne erro_json("Envie um JSON com os campos a alterar.", 400)
+        fim
+        se "feita" em dados então
+            se tipo(dados.feita) != "booleano" então
+                retorne erro_json("O campo \"feita\" deve ser verdadeiro ou falso.", 422)
+            fim
+            tarefa.feita = dados.feita
+        fim
+        se "título" em dados então
+            tarefa.título = aparar(texto(dados.título))
+        fim
+        repositorio.salvar(tarefa)
+        retorne tarefa
+    fim)
+
+    app.delete("/api/tarefas/<id:inteiro>", função(pedido)
+        se não repositorio.remover(pedido.parâmetros.id) então
+            retorne erro_json("Tarefa não encontrada.", 404)
+        fim
+        retorne nulo
+    fim)
+
+    app.arquivos("/estatico", "publico")
+    app.cliente("/app.galoc", "cliente.galo")
+    retorne app
+fim
+
+função erro_json(mensagem como texto, status como inteiro)
+    retorne resposta_json({"erro": mensagem}, status)
+fim

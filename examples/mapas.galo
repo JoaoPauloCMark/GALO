@@ -1,0 +1,25 @@
+programa "Mapas"
+
+# Um mapa associa chaves a valores. Com '.', acessamos campos de texto.
+defina pessoa como {"nome": "Ana", "idade": 30}
+pessoa.cidade = "Belo Horizonte"
+pessoa["idade"] += 1
+
+mostre pessoa
+mostre "{pessoa.nome} tem {pessoa.idade} anos e mora em {pessoa.cidade}."
+
+# Contando palavras com um mapa
+defina frase como "o galo canta e o galo voa e o galo dorme"
+defina contagem como {}
+para cada palavra em dividir(frase) faça
+    contagem[palavra] = obter(contagem, palavra, 0) + 1
+fim
+
+para cada palavra, vezes em contagem faça
+    mostre "{palavra}: {vezes}"
+fim
+
+mostre "Chaves:", chaves(contagem)
+mostre "'galo' aparece?", "galo" em contagem
+mostre "Removendo 'e':", remover_chave(contagem, "e")
+mostre "Tamanho final:", tamanho(contagem)

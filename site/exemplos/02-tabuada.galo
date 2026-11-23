@@ -1,0 +1,7 @@
+# título: Tabuada
+# emoji: ✖️
+# descrição: Um laço "para" e textos com {interpolação}. Troque o 7 por outro número!
+defina n como 7
+para i de 1 até 10 faça
+    mostre "{n} × {i} = {n * i}"
+fim

@@ -1,0 +1,86 @@
+{
+  "comments": {
+    "lineComment": "#",
+    "blockComment": [
+      "#[",
+      "]#"
+    ]
+  },
+  "brackets": [
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ],
+    [
+      "{",
+      "}"
+    ]
+  ],
+  "autoClosingPairs": [
+    {
+      "open": "[",
+      "close": "]"
+    },
+    {
+      "open": "(",
+      "close": ")"
+    },
+    {
+      "open": "{",
+      "close": "}"
+    },
+    {
+      "open": "\"",
+      "close": "\"",
+      "notIn": [
+        "string",
+        "comment"
+      ]
+    },
+    {
+      "open": "'",
+      "close": "'",
+      "notIn": [
+        "string",
+        "comment"
+      ]
+    }
+  ],
+  "surroundingPairs": [
+    [
+      "[",
+      "]"
+    ],
+    [
+      "(",
+      ")"
+    ],
+    [
+      "{",
+      "}"
+    ],
+    [
+      "\"",
+      "\""
+    ],
+    [
+      "'",
+      "'"
+    ]
+  ],
+  "wordPattern": "[A-Za-zÀ-ÖØ-öø-ÿ_][A-Za-zÀ-ÖØ-öø-ÿ0-9_]*|-?\\d+(?:\\.\\d+)?",
+  "indentationRules": {
+    "increaseIndentPattern": "^\\s*(?:(?:se|senão se|senao se)\\s.*\\s(?:então|entao)|(?:senão|senao)|(?:enquanto|para)\\s.*\\s(?:faça|faca)|repita\\s.*\\svezes|(?:função|funcao)\\s.*\\).*|registro\\s+[A-Za-zÀ-ÖØ-öø-ÿ_][A-Za-zÀ-ÖØ-öø-ÿ0-9_]*|tente|capture(?:\\s+[A-Za-zÀ-ÖØ-öø-ÿ_][A-Za-zÀ-ÖØ-öø-ÿ0-9_]*)?)\\s*(?:#.*)?$",
+    "decreaseIndentPattern": "^\\s*(?:fim|senão|senao|capture)(?:\\s|#|$)"
+  },
+  "folding": {
+    "markers": {
+      "start": "^\\s*#\\[",
+      "end": "^\\s*\\]#"
+    }
+  }
+}

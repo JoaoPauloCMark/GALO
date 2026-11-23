@@ -1,0 +1,134 @@
+programa "Testes do site da GALO"
+# Execute com:  galo executar site/testes.galo
+# Sem rede: os pedidos passam por app.testar(). O site não tem banco de dados.
+
+importe criar_app de "app.galo"
+importe "compartilhado/link.galo" como link
+importe "compartilhado/estatisticas.galo" como estatísticas
+importe calcular de "compartilhado/calculadora.galo"
+importe realçar, contar_palavras_chave de "compartilhado/realce.galo"
+importe "compartilhado/cafeteria.galo" como cafeteria
+importe "compartilhado/graficos.galo" como graficos
+
+defina total como 0
+
+função verificar(condição como booleano, descrição como texto)
+    afirmar(condição, descrição)
+    total += 1
+fim
+
+# ------------------------------------------------------------------ calculadora
+defina contas como [
+    ["1 + 2 × 3", "7"], ["(1 + 2) × 3", "9"], ["0,1 + 0,2", "0,3"], ["10 ÷ 4", "2,5"], ["6 ÷ 3", "2"],
+    ["2 ^ 100", "1.267.650.600.228.229.401.496.703.205.376"], ["√16", "4"], ["2(3 + 1)", "8"],
+    ["50%", "0,5"], ["-2 ^ 2", "-4"], ["2 ^ 3 ^ 2", "512"], ["1 ÷ 3", "0,333333333333"],
+    ["0,00001234", "1,234 × 10^-5"], ["9 ^ 0,5", "3"], ["123456789 × 987654321", "121.932.631.112.635.269"]
+]
+para cada conta em contas faça
+    defina r como calcular(conta[1])
+    defina obtido como se r.ok então r.texto senão "erro: " + r.mensagem
+    verificar(obtido == conta[2], "calcular('{conta[1]}') deveria dar {conta[2]}, deu {obtido}")
+fim
+para cada errada em ["1 ÷ 0", "(1 + 2", "1 + 2)", "1 +", "abc", "3,4,5", "(-8) ^ 0,5"] faça
+    verificar(não calcular(errada).ok, "'{errada}' deveria ser recusada")
+fim
+verificar(calcular("1 ÷ 0").mensagem == "Não dá para dividir por zero 🙃", "mensagem da divisão por zero")
+
+# ------------------------------------------------------------------ realce de sintaxe
+defina html como realçar('se x então mostre "<b>{x}</b>" fim # fim')
+verificar("<span class=\"r-pc\">se</span>" em html, "palavra-chave realçada")
+verificar("&lt;b&gt;" em html e não ("<b>" em html), "o código é escapado (nada de HTML injetado)")
+verificar("<span class=\"r-com\"># fim</span>" em html, "comentário realçado")
+verificar("<span class=\"r-interp\">" em html, "interpolação realçada")
+verificar(realçar("entao") == "<span class=\"r-pc\">entao</span>", "palavra-chave sem acento também vale")
+defina contagem como contar_palavras_chave("se a então mostre 1 senão mostre \"se\" fim # se")
+verificar(contagem == {"se": 1, "então": 1, "mostre": 2, "senão": 1, "fim": 1}, "contagem de palavras-chave: {contagem}")
+
+# ------------------------------------------------------------------ cafeteria e gráficos
+defina c1 como cafeteria.nova_cafeteria(42)
+repita 100 vezes
+    cafeteria.avançar(c1)
+fim
+defina c2 como cafeteria.nova_cafeteria(42)
+repita 100 vezes
+    cafeteria.avançar(c2)
+fim
+verificar(c1.temperaturas == c2.temperaturas e c1.vendas_semana == c2.vendas_semana, "mesma semente, mesma simulação")
+verificar(tamanho(c1.temperaturas) == 40, "guarda as últimas 40 temperaturas")
+verificar(tamanho(c1.eventos) <= 7, "guarda só os últimos eventos")
+verificar(c1.vendidas_hoje() > 0 e c1.faturamento > 0, "vendeu durante o dia")
+verificar(soma(valores(c1.por_categoria())) == soma(mapear(c1.cardápio, função(b) retorne b.vendidas fim)), "categorias somam as vendas")
+verificar(todos(c1.temperaturas, função(t) retorne t >= 80 e t <= 99 fim), "temperatura da máquina dentro dos limites")
+defina c3 como cafeteria.nova_cafeteria(1)
+repita 4 vezes
+    cafeteria.avançar(c3)
+fim
+verificar(c3.aberta() e algum(c3.eventos, função(ev) retorne ev.mensagem == "Bom dia! A cafeteria abriu." fim), "abre às 7h")
+verificar(cafeteria.dias_da_semana("sábado") == ["dom", "seg", "ter", "qua", "qui", "sex", "hoje"], "dias da semana")
+defina svg como graficos.barras(["a", "b", "c"], [1, 5, 2])
+verificar(tamanho(procurar_todos(svg, "<rect ")) == 3, "três barras")
+verificar(começa_com(graficos.linha([1, 2, 3], "x"), "<svg"), "gráfico de linha")
+
+# ------------------------------------------------------------------ link de compartilhamento
+defina programa_teste como "mostre \"olá, ação! 🐓\"\n# </script> + / ="
+defina endereço como link.endereço_do_programa("https://galo.exemplo.com/experimente?exemplo=ola", programa_teste)
+verificar(começa_com(endereço, "https://galo.exemplo.com/experimente#codigo="), "link aponta para o Experimente: {endereço}")
+defina carga como fatia(endereço, posição(endereço, "#codigo=") + 8)
+verificar(não ("+" em carga) e não ("/" em carga) e não ("=" em carga), "link só com caracteres seguros: {carga}")
+verificar(link.código_do_endereço(endereço) == programa_teste, "o link traz o programa de volta")
+verificar(link.código_do_endereço("http://x/experimente") == nulo, "endereço sem programa")
+verificar(link.decodificar_link("!!!") == nulo e link.decodificar_link("a") == nulo, "link estragado não quebra nada")
+
+# ------------------------------------------------------------------ "seus números" (guardados no navegador)
+defina est como estatísticas.completar({"execuções": "estragado", "erros": {"G201": 2}, "outra": 1})
+verificar(est.execuções == 0 e est.erros == {"G201": 2} e não ("outra" em est), "dados estragados são corrigidos")
+estatísticas.registrar(est, "mostre x\nmostre y", "compilação", "G201", nulo, {"mostre": 2}, tempo())
+estatísticas.registrar(est, "mostre 1", "execução", nulo, 3.5, {"mostre": 1, "se": 1}, tempo() - 3600)
+estatísticas.registrar(est, "mostre [1][2]", "execução", "G304", 1, {"mostre": 1}, tempo() - 100000)
+defina resumo como estatísticas.resumo(est, tempo())
+verificar(resumo.execuções == 3 e resumo.sucessos == 1 e resumo.erros_compilação == 1 e resumo.erros_execução == 1, "contagens: {resumo}")
+verificar(resumo.linhas == 4 e resumo.tempo_médio_ms == 2.25, "linhas e tempo médio")
+verificar(resumo.erros == [{"codigo": "G201", "quantidade": 3}, {"codigo": "G304", "quantidade": 1}], "erros mais comuns")
+verificar(resumo.palavras[1] == {"palavra": "mostre", "usos": 4}, "palavras-chave")
+verificar(tamanho(resumo.por_hora) == 24 e soma(mapear(resumo.por_hora, função(h) retorne h.quantidade fim)) == 2, "só as últimas 24 horas")
+verificar(estatísticas.completar(nulo) == estatísticas.novas_estatísticas(), "começa do zero")
+
+# ------------------------------------------------------------------ servidor (sem banco de dados)
+defina app como criar_app()
+
+defina r como app.testar("GET", "/")
+verificar(r.status == 200, "página inicial: {r.status}")
+verificar("Programe em" em r.corpo e "data-programas=" em r.corpo, "página inicial tem o topo e a vitrine")
+verificar(tamanho(procurar_todos(r.corpo, "class=\"exemplo ")) == 12, "página inicial tem os 12 exemplos")
+verificar("[G201]" em r.corpo e "Você quis dizer" em r.corpo, "página inicial mostra um erro real do compilador")
+verificar(não ("visita" em r.corpo), "nenhuma contagem de visitas")
+
+r = app.testar("GET", "/experimente")
+verificar(r.status == 200 e "Bem-vindo(a) ao Experimente" em r.corpo e "id=\"aviso-link\" hidden" em r.corpo, "experimente com o programa inicial")
+r = app.testar("GET", "/experimente?exemplo=tabuada")
+verificar('{n} × {i}' em r.corpo e "data-restaurar=\"nao\"" em r.corpo, "experimente abre o exemplo pedido")
+r = app.testar("GET", "/painel")
+verificar(r.status == 200 e "Seus números" em r.corpo e "Cafeteria ao vivo" em r.corpo, "painel")
+
+# compilar (o servidor só compila; não guarda nada)
+r = app.testar("POST", "/api/compilar", {"código": "mostre 1 + 1", "origem": "experimente"})
+verificar(r.status == 200 e r.json.ok e tamanho(r.json.bytecode) > 20, "compila um programa válido")
+r = app.testar("POST", "/api/compilar", {"código": "defina nome como 1\nmostre nmoe"})
+verificar(não r.json.ok e r.json.erros[1].código == "G201" e r.json.erros[1].linha == 2, "devolve o erro de compilação")
+r = app.testar("POST", "/api/compilar", {"código": "importe \"../app.galo\" como app"})
+verificar(r.json.erros[1].código == "G220", "importe não é permitido")
+verificar(app.testar("POST", "/api/compilar", {"outra": 1}).status == 400, "pedido sem código é recusado")
+verificar(app.testar("POST", "/api/compilar", {"código": repetir("#", 20001)}).status == 413, "código grande demais")
+para cada removida em ["/api/estatisticas", "/api/programas/abc", "/p/abc"] faça
+    verificar(app.testar("GET", removida).status == 404, "{removida} não existe mais")
+fim
+
+# exemplos, arquivos estáticos e programas do navegador
+defina exemplos como app.testar("GET", "/api/exemplos").json
+verificar(tamanho(exemplos) == 12 e exemplos[1].id == "ola" e exemplos[1].entradas == ["Ana"], "lista de exemplos")
+verificar(app.testar("GET", "/estatico/estilo.css").status == 200, "estilo")
+para cada js em ["/js/inicio.galoc", "/js/experimente.galoc", "/js/painel.galoc"] faça
+    verificar(app.testar("GET", js).status == 200, "o programa do navegador {js} compila")
+fim
+
+mostre "✔ {total} verificações do site passaram."

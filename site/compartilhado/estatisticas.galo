@@ -1,0 +1,100 @@
+# "Seus números": estatísticas de uso de cada pessoa, guardadas só no navegador dela
+# (armazenar/recuperar, o localStorage). O servidor não grava nada.
+#
+# Funções puras (recebem e devolvem mapas), por isso também são testadas no servidor.
+
+constante MÁXIMO_HORÁRIOS como 500
+
+função novas_estatísticas() retorna mapa
+    retorne {
+        "execuções": 0, "sucessos": 0, "erros_compilação": 0, "erros_execução": 0, "linhas": 0,
+        "tempo_total_ms": 0.0, "medições": 0, "compartilhados": 0,
+        "erros": {}, "palavras": {}, "horários": []
+    }
+fim
+
+função _mesmo_tipo(a, b) retorna booleano
+    defina números como ["inteiro", "decimal"]
+    retorne tipo(a) == tipo(b) ou (tipo(a) em números e tipo(b) em números)
+fim
+
+# Garante todos os campos: dados antigos ou estragados no navegador não quebram o painel.
+função completar(guardado) retorna mapa
+    defina est como novas_estatísticas()
+    se tipo(guardado) != "mapa" então
+        retorne est
+    fim
+    para cada chave, padrão em novas_estatísticas() faça
+        se chave em guardado e _mesmo_tipo(guardado[chave], padrão) então
+            est[chave] = guardado[chave]
+        fim
+    fim
+    retorne est
+fim
+
+# Conta uma execução. fase: "compilação" (não compilou) ou "execução" (compilou e rodou).
+função registrar(est como mapa, código como texto, fase como texto, código_erro, tempo_ms,
+                 palavras como mapa, quando) retorna mapa
+    est["execuções"] += 1
+    est["linhas"] += tamanho(dividir(código, "\n"))
+    se fase == "compilação" então
+        est["erros_compilação"] += 1
+    senão se código_erro == nulo então
+        est["sucessos"] += 1
+    senão
+        est["erros_execução"] += 1
+    fim
+    se código_erro != nulo então
+        est.erros[código_erro] = obter(est.erros, código_erro, 0) + 1
+    fim
+    se tempo_ms != nulo então
+        est["tempo_total_ms"] += tempo_ms
+        est["medições"] += 1
+    fim
+    para cada palavra, usos em palavras faça
+        est.palavras[palavra] = obter(est.palavras, palavra, 0) + usos
+    fim
+    adicionar(est["horários"], quando)
+    se tamanho(est["horários"]) > MÁXIMO_HORÁRIOS então
+        remover(est["horários"], 1)
+    fim
+    retorne est
+fim
+
+função _maiores(contagem como mapa, nome_chave como texto, nome_valor como texto, quantos como inteiro) retorna lista
+    defina itens como []
+    para cada chave, valor em contagem faça
+        adicionar(itens, {nome_chave: chave, nome_valor: valor})
+    fim
+    retorne fatia(ordenar_por(itens, função(item) retorne -item[nome_valor] fim), 1, quantos)
+fim
+
+# Os números prontos para o painel. `agora` é tempo() (segundos).
+função resumo(est como mapa, agora) retorna mapa
+    defina por_chave como {}
+    para cada t em est["horários"] faça
+        defina chave como fatia(data_hora_iso(t), 1, 13)          # "2026-11-22T14"
+        por_chave[chave] = obter(por_chave, chave, 0) + 1
+    fim
+    defina por_hora como []
+    para k de 23 até 0 faça
+        defina iso como data_hora_iso(agora - k * 3600)
+        adicionar(por_hora, {"hora": fatia(iso, 12, 13), "quantidade": obter(por_chave, fatia(iso, 1, 13), 0)})
+    fim
+    defina tempo_médio como 0.0
+    se est["medições"] > 0 então
+        tempo_médio = est["tempo_total_ms"] / est["medições"]
+    fim
+    retorne {
+        "execuções": est["execuções"],
+        "sucessos": est["sucessos"],
+        "erros_compilação": est["erros_compilação"],
+        "erros_execução": est["erros_execução"],
+        "linhas": est["linhas"],
+        "tempo_médio_ms": tempo_médio,
+        "compartilhados": est["compartilhados"],
+        "por_hora": por_hora,
+        "erros": _maiores(est.erros, "codigo", "quantidade", 6),
+        "palavras": _maiores(est.palavras, "palavra", "usos", 14)
+    }
+fim

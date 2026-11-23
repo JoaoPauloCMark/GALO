@@ -1,0 +1,63 @@
+# Testes automatizados da API, escritos em GALO e executados sem rede:
+#   galo executar examples/tarefas/testes.galo
+importe criar_app de "api.galo"
+importe abrir_repositorio de "modelos.galo"
+
+defina app como criar_app(abrir_repositorio(":memória:"))
+defina total como 0
+
+função teste(descrição como texto, verificação)
+    verificação()
+    total += 1
+    mostre "  ok  {descrição}"
+fim
+
+mostre "Testando a API de tarefas..."
+
+teste("a lista começa vazia", função()
+    defina r como app.testar("GET", "/api/tarefas")
+    afirmar(r.status == 200 e r.json == [], "esperava lista vazia, veio {r.corpo}")
+fim)
+
+teste("criar devolve 201 e a tarefa criada", função()
+    defina r como app.testar("POST", "/api/tarefas", {"título": "  Comprar pão  "})
+    afirmar(r.status == 201, "status {r.status}")
+    afirmar(r.json.título == "Comprar pão" e r.json.feita == falso e r.json.id == 1)
+fim)
+
+teste("título vazio é recusado com 422", função()
+    afirmar(app.testar("POST", "/api/tarefas", {"título": "   "}).status == 422)
+    afirmar(app.testar("POST", "/api/tarefas", "não é json").status == 400)
+fim)
+
+teste("marcar como feita", função()
+    defina r como app.testar("PATCH", "/api/tarefas/1", {"feita": verdadeiro})
+    afirmar(r.status == 200 e r.json.feita == verdadeiro)
+    afirmar(app.testar("PATCH", "/api/tarefas/1", {"feita": "sim"}).status == 422)
+fim)
+
+teste("tarefa inexistente dá 404", função()
+    afirmar(app.testar("PATCH", "/api/tarefas/99", {"feita": verdadeiro}).status == 404)
+    afirmar(app.testar("DELETE", "/api/tarefas/99").status == 404)
+fim)
+
+teste("a página inicial mostra as tarefas com segurança", função()
+    app.testar("POST", "/api/tarefas", {"título": "<script>alert(1)</script>"})
+    defina html como app.testar("GET", "/").corpo
+    afirmar(contém(html, "Comprar pão"), "a página deveria listar a tarefa")
+    afirmar(contém(html, "&lt;script&gt;") e não contém(html, "<script>alert"), "o título deveria ser escapado")
+    afirmar(contém(html, "2 tarefa(s), 1 pendente(s)"))
+fim)
+
+teste("apagar devolve 204", função()
+    afirmar(app.testar("DELETE", "/api/tarefas/2").status == 204)
+    afirmar(tamanho(app.testar("GET", "/api/tarefas").json) == 1)
+fim)
+
+teste("o navegador recebe o programa compilado e a VM", função()
+    afirmar(app.testar("GET", "/app.galoc").status == 200)
+    afirmar(app.testar("GET", "/_galo/galo.js").status == 200)
+    afirmar(app.testar("GET", "/estatico/estilo.css").cabeçalhos["content-type"] == "text/css; charset=utf-8")
+fim)
+
+mostre "{total} testes passaram."

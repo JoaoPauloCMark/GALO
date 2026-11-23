@@ -1,0 +1,43 @@
+# Links de programas compartilhados: o código vai dentro do próprio endereço, depois do "#"
+# (a parte do endereço que o navegador nunca envia ao servidor). Nada é guardado em lugar nenhum.
+#
+#   https://exemplo.com/experimente#codigo=bW9zdHJlICJvbMOhIg
+
+constante PREFIXO como "#codigo="
+
+# Base64 com o alfabeto seguro para endereços (- e _ no lugar de + e /), sem o "=" do fim.
+função codificar_link(código como texto) retorna texto
+    defina b64 como codificar_base64(código)
+    retorne substituir(substituir(substituir(b64, "+", "-"), "/", "_"), "=", "")
+fim
+
+# O código de volta, ou nulo se o trecho não for um link válido.
+função decodificar_link(trecho como texto)
+    defina t como substituir(substituir(aparar(trecho), "-", "+"), "_", "/")
+    se t == "" ou tamanho(t) % 4 == 1 então
+        retorne nulo
+    fim
+    enquanto tamanho(t) % 4 != 0 faça
+        t += "="
+    fim
+    tente
+        retorne decodificar_base64(t)
+    capture
+        retorne nulo
+    fim
+fim
+
+# O código que veio num endereço completo ("https://.../experimente#codigo=..."), ou nulo.
+função código_do_endereço(endereço como texto)
+    defina i como posição(endereço, PREFIXO)
+    se i == nulo então
+        retorne nulo
+    fim
+    retorne decodificar_link(fatia(endereço, i + tamanho(PREFIXO)))
+fim
+
+# O link que abre `código` no Experimente, no mesmo site de `endereço_atual`.
+função endereço_do_programa(endereço_atual como texto, código como texto) retorna texto
+    defina partes como dividir(endereço_atual, "/")   # ["https:", "", "exemplo.com", ...]
+    retorne partes[1] + "//" + partes[3] + "/experimente" + PREFIXO + codificar_link(código)
+fim

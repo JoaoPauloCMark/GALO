@@ -1,0 +1,259 @@
+# Calculadora: lê expressões como "2 × (3 + 4,5)" ou "2 ^ 100" e calcula com a aritmética da
+# GALO — inteiros sem limite de tamanho (2 ^ 100 sai com todos os dígitos) e decimais IEEE 754.
+# Roda no navegador (a calculadora da página inicial) e é testada no servidor (testes.galo).
+
+registro Símbolo(tipo como texto, valor, posição como inteiro)
+
+função _é_algarismo(c como texto) retorna booleano
+    retorne c >= "0" e c <= "9"
+fim
+
+função _falha(mensagem como texto)
+    lance {"mensagem": mensagem, "código": "CALC"}
+fim
+
+# Separa a expressão em números, operadores e parênteses. Vírgula e ponto são a casa decimal.
+função símbolos(expressão como texto) retorna lista
+    defina cs como caracteres(expressão)
+    defina n como tamanho(cs)
+    defina saída como []
+    defina i como 1
+    enquanto i <= n faça
+        defina c como cs[i]
+        se c == " " então
+            i += 1
+        senão se _é_algarismo(c) ou c == "," ou c == "." então
+            defina início como i
+            defina separadores como 0
+            enquanto i <= n e (_é_algarismo(cs[i]) ou cs[i] == "," ou cs[i] == ".") faça
+                se cs[i] == "," ou cs[i] == "." então
+                    separadores += 1
+                fim
+                i += 1
+            fim
+            defina escrito como substituir(juntar(fatia(cs, início, i - 1), ""), ",", ".")
+            se separadores > 1 ou escrito == "." então
+                _falha("O número \"" + substituir(escrito, ".", ",") + "\" não é válido.")
+            fim
+            defina valor como se separadores == 0 então inteiro(escrito) senão decimal(escrito)
+            adicionar(saída, Símbolo("número", valor, início))
+        senão se c em "+-−×*x÷/^%()√π" então
+            defina normal como obter({"−": "-", "*": "×", "x": "×", "/": "÷"}, c, c)
+            adicionar(saída, Símbolo("op", normal, i))
+            i += 1
+        senão
+            _falha("Não sei o que fazer com \"" + c + "\".")
+        fim
+    fim
+    retorne saída
+fim
+
+registro Analisador
+    lista_de_símbolos como lista
+    pos como inteiro = 1
+
+    função atual()
+        retorne se eu.pos <= tamanho(eu.lista_de_símbolos) então eu.lista_de_símbolos[eu.pos] senão nulo
+    fim
+
+    função confere(op como texto) retorna booleano
+        defina s como eu.atual()
+        retorne s != nulo e s.tipo == "op" e s.valor == op
+    fim
+
+    função avança()
+        eu.pos += 1
+    fim
+
+    # expressão := termo (("+" | "-") termo)*
+    função expressão()
+        defina valor como eu.termo()
+        enquanto eu.confere("+") ou eu.confere("-") faça
+            defina op como eu.atual().valor
+            eu.avança()
+            defina direita como eu.termo()
+            valor = se op == "+" então valor + direita senão valor - direita
+        fim
+        retorne valor
+    fim
+
+    # termo := unário (("×" | "÷") unário)*, com multiplicação implícita: 2(3 + 1), 2π, 3√4
+    função termo()
+        defina valor como eu.unário()
+        enquanto verdadeiro faça
+            se eu.confere("×") então
+                eu.avança()
+                valor = valor * eu.unário()
+            senão se eu.confere("÷") então
+                eu.avança()
+                valor = dividir_exato(valor, eu.unário())
+            senão se eu.confere("(") ou eu.confere("π") ou eu.confere("√") ou (eu.atual() != nulo e eu.atual().tipo == "número") então
+                valor = valor * eu.unário()
+            senão
+                pare
+            fim
+        fim
+        retorne valor
+    fim
+
+    # unário := "-" unário | "+" unário | exponencial
+    função unário()
+        se eu.confere("-") então
+            eu.avança()
+            retorne -eu.unário()
+        fim
+        se eu.confere("+") então
+            eu.avança()
+            retorne eu.unário()
+        fim
+        retorne eu.exponencial()
+    fim
+
+    # exponencial := primário ["^" unário]   (à direita: 2 ^ 3 ^ 2 = 2 ^ 9)
+    função exponencial()
+        defina base como eu.primário()
+        se eu.confere("^") então
+            eu.avança()
+            defina expoente como eu.unário()
+            se tipo(expoente) == "inteiro" e tipo(base) == "inteiro" e absoluto(expoente) > 20000 então
+                _falha("Expoente grande demais para mostrar o resultado.")
+            fim
+            se base < 0 e tipo(expoente) == "decimal" e expoente != piso(expoente) então
+                _falha("Número negativo elevado a fração não existe nos reais.")
+            fim
+            retorne base ^ expoente
+        fim
+        retorne base
+    fim
+
+    # primário := número ["%"] | "(" expressão ")" ["%"] | "√" primário | "π"
+    função primário()
+        defina s como eu.atual()
+        se s == nulo então
+            _falha("A expressão terminou cedo demais.")
+        fim
+        defina valor como nulo
+        se s.tipo == "número" então
+            eu.avança()
+            valor = s.valor
+        senão se s.valor == "(" então
+            eu.avança()
+            valor = eu.expressão()
+            se não eu.confere(")") então
+                _falha("Falta fechar um parêntese.")
+            fim
+            eu.avança()
+        senão se s.valor == "√" então
+            eu.avança()
+            defina radicando como eu.primário()
+            se radicando < 0 então
+                _falha("Não existe raiz quadrada real de número negativo.")
+            fim
+            valor = raiz_exata(radicando)
+        senão se s.valor == "π" então
+            eu.avança()
+            valor = pi
+        senão
+            _falha("Esperava um número antes de \"" + s.valor + "\".")
+        fim
+        enquanto eu.confere("%") faça
+            eu.avança()
+            valor = dividir_exato(valor, 100)
+        fim
+        retorne valor
+    fim
+fim
+
+# Divisão que mantém o resultado inteiro quando a conta é exata (6 ÷ 3 = 2, não 2.0).
+função dividir_exato(a, b)
+    se b == 0 então
+        _falha("Não dá para dividir por zero 🙃")
+    fim
+    se tipo(a) == "inteiro" e tipo(b) == "inteiro" e a % b == 0 então
+        retorne a // b
+    fim
+    retorne a / b
+fim
+
+função raiz_exata(x)
+    defina r como raiz(x)
+    se tipo(x) == "inteiro" e r < 1e15 e inteiro(r) ^ 2 == x então
+        retorne inteiro(r)
+    fim
+    retorne r
+fim
+
+# Calcula a expressão. Devolve {ok, valor, texto} ou {ok: falso, mensagem}.
+função calcular(expressão como texto) retorna mapa
+    se aparar(expressão) == "" então
+        retorne {"ok": falso, "mensagem": ""}
+    fim
+    tente
+        defina analisador como Analisador(símbolos(expressão))
+        defina valor como analisador.expressão()
+        se analisador.atual() != nulo então
+            defina sobra como analisador.atual()
+            _falha(se sobra.valor == ")" então "Há um parêntese fechando sem ter aberto." senão "Sobrou \"" + texto(sobra.valor) + "\" no fim da conta.")
+        fim
+        retorne {"ok": verdadeiro, "valor": valor, "texto": formatar_número(valor)}
+    capture problema
+        se problema.código == "G303" então
+            retorne {"ok": falso, "mensagem": "Não dá para dividir por zero 🙃"}
+        fim
+        se problema.código == "G317" então
+            retorne {"ok": falso, "mensagem": "Número grande demais! 🤯"}
+        fim
+        retorne {"ok": falso, "mensagem": problema.mensagem}
+    fim
+fim
+
+# Agrupa os milhares com ponto: 1234567 -> "1.234.567".
+função agrupar_milhares(algarismos como texto) retorna texto
+    defina cs como caracteres(algarismos)
+    defina saída como ""
+    defina n como tamanho(cs)
+    para i de 1 até n faça
+        se i > 1 e (n - i + 1) % 3 == 0 então
+            saída += "."
+        fim
+        saída += cs[i]
+    fim
+    retorne saída
+fim
+
+# Número no jeito brasileiro: 1.234.567,89. Decimais com no máximo 12 algarismos significativos
+# (assim 0,1 + 0,2 mostra 0,3, como numa calculadora de mesa).
+função formatar_número(valor) retorna texto
+    se tipo(valor) == "inteiro" então
+        defina sinal como se valor < 0 então "-" senão ""
+        retorne sinal + agrupar_milhares(texto(absoluto(valor)))
+    fim
+    se valor == 0 então
+        retorne "0"
+    fim
+    defina tamanho_ordem como piso(logaritmo(absoluto(valor), 10))
+    se absoluto(valor) >= 1e15 ou absoluto(valor) < 1e-4 então
+        defina escrito como texto(valor)
+        defina partes como dividir(escrito, "e")
+        defina mantissa como decimal(partes[1])
+        defina expoente como inteiro(partes[2])
+        defina m como substituir(texto(arredondar(mantissa, 10)), ".", ",")
+        se termina_com(m, ",0") então
+            m = fatia(m, 1, -3)
+        fim
+        retorne m + " × 10^" + texto(expoente)
+    fim
+    defina casas como máximo(0, 11 - tamanho_ordem)
+    defina arredondado como arredondar(valor, casas)
+    se arredondado == piso(arredondado) e absoluto(arredondado) < 1e15 então
+        retorne formatar_número(inteiro(arredondado))
+    fim
+    defina escrito como texto(arredondado)
+    defina inteira como dividir(escrito, ".")[1]
+    defina frações como dividir(escrito, ".")[2]
+    defina sinal como se começa_com(inteira, "-") então "-" senão ""
+    se sinal == "-" então
+        inteira = fatia(inteira, 2)
+    fim
+    retorne sinal + agrupar_milhares(inteira) + "," + frações
+fim

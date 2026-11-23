@@ -1,0 +1,17 @@
+# título: Torre de Hanói
+# emoji: 🗼
+# descrição: Recursão: mover 3 discos da torre A para a C, um de cada vez, sem nunca pôr um disco maior sobre um menor.
+defina movimentos como 0
+
+função mover(n, origem, destino, auxiliar)
+    se n == 0 então
+        retorne
+    fim
+    mover(n - 1, origem, auxiliar, destino)
+    movimentos += 1
+    mostre "{movimentos}. disco {n}: {origem} → {destino}"
+    mover(n - 1, auxiliar, destino, origem)
+fim
+
+mover(3, "A", "C", "B")
+mostre "Pronto em {movimentos} movimentos (2³ − 1)."

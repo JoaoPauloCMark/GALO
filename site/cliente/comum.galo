@@ -1,0 +1,162 @@
+# Partes usadas por todas as páginas do site (roda no navegador).
+
+importe contar_palavras_chave de "../compartilhado/realce.galo"
+importe "../compartilhado/estatisticas.galo" como estatísticas
+
+# "Seus números" ficam só neste navegador (o servidor não guarda nada).
+constante CHAVE_ESTATÍSTICAS como "galo-estatisticas"
+
+função ler_estatísticas() retorna mapa
+    tente
+        retorne estatísticas.completar(recuperar(CHAVE_ESTATÍSTICAS, nulo))
+    capture
+        retorne estatísticas.novas_estatísticas()
+    fim
+fim
+
+função _guardar(est como mapa)
+    tente
+        armazenar(CHAVE_ESTATÍSTICAS, est)
+    capture
+        retorne    # navegação privada ou armazenamento cheio: os números só não são guardados
+    fim
+fim
+
+função anotar_execução(código como texto, fase como texto, código_erro, tempo_ms)
+    defina est como ler_estatísticas()
+    estatísticas.registrar(est, código, fase, código_erro, tempo_ms, contar_palavras_chave(código), tempo())
+    _guardar(est)
+fim
+
+função anotar_compartilhamento()
+    defina est como ler_estatísticas()
+    est["compartilhados"] += 1
+    _guardar(est)
+fim
+
+função apagar_estatísticas()
+    tente
+        esquecer(CHAVE_ESTATÍSTICAS)
+    capture
+        retorne
+    fim
+fim
+
+# Menu do celular: o botão ☰ abre e fecha a navegação.
+função ativar_menu()
+    defina botão como elemento("#menu-botao")
+    defina menu como elemento("#menu")
+    se botão == nulo ou menu == nulo então
+        retorne
+    fim
+    botão.ao("clique", função()
+        defina aberto como menu.alternar_classe("aberto")
+        botão.definir_atributo("aria-expanded", se aberto então "true" senão "false")
+    fim)
+fim
+
+# Compila o código no servidor e executa no navegador, isolado. `ao_terminar` recebe um mapa:
+#   {fase: "rede", mensagem}                          o servidor não respondeu direito
+#   {fase: "compilação", erros, avisos}               o programa tem erros de compilação
+#   {fase: "execução", saída, erro, tempo, avisos}    executou (erro é nulo ou um mapa)
+função rodar_código(código como texto, origem como texto, entradas como lista, ao_terminar)
+    buscar("/api/compilar", {"método": "POST", "json": {"código": código, "origem": origem}}, função(r)
+        se r.json == nulo então
+            ao_terminar({"fase": "rede", "mensagem": "Não foi possível falar com o servidor GALO. Ele está rodando?"})
+            retorne
+        fim
+        se não r.ok então
+            ao_terminar({"fase": "rede", "mensagem": obter(r.json, "erro", "O servidor recusou o programa.")})
+            retorne
+        fim
+        defina compilado como r.json
+        se não compilado.ok então
+            anotar_execução(código, "compilação", compilado.erros[1].código, nulo)
+            ao_terminar({"fase": "compilação", "erros": compilado.erros, "avisos": compilado.avisos})
+            retorne
+        fim
+        executar_programa(compilado.bytecode, {"entradas": entradas, "limite_segundos": 5}, função(res)
+            defina código_erro como se res.erro == nulo então nulo senão res.erro.código
+            anotar_execução(código, "execução", código_erro, res.tempo * 1000)
+            ao_terminar({"fase": "execução", "saída": res.saída, "erro": res.erro, "tempo": res.tempo,
+                         "interrompido": res.interrompido, "avisos": compilado.avisos})
+        fim)
+    fim)
+fim
+
+função _onde(diagnóstico) retorna texto
+    se diagnóstico.linha == nulo então
+        retorne ""
+    fim
+    defina coluna como obter(diagnóstico, "coluna", 1)
+    retorne " · linha {diagnóstico.linha}, coluna {coluna}"
+fim
+
+# Cartão de erro em HTML (tudo escapado: a mensagem pode conter o código de quem visita).
+função cartão_de_erro(diagnóstico, rótulo como texto) retorna texto
+    defina html como "<div class=\"erro-cartao\"><div class=\"erro-topo\"><span class=\"erro-codigo\">" +
+        escapar_html(diagnóstico.código) + "</span><span>" + escapar_html(rótulo + _onde(diagnóstico)) + "</span></div>"
+    html += "<p class=\"erro-msg\">" + escapar_html(diagnóstico.mensagem) + "</p>"
+    se obter(diagnóstico, "sugestão", nulo) != nulo então
+        html += "<p class=\"erro-sugestao\">💡 " + escapar_html(diagnóstico.sugestão) + "</p>"
+    fim
+    retorne html + "</div>"
+fim
+
+função _avisos(avisos) retorna texto
+    defina html como ""
+    para cada a em avisos faça
+        html += "<div class=\"aviso-cartao\">⚠️ " + escapar_html(a.código + _onde(a) + ": " + a.mensagem) + "</div>"
+    fim
+    retorne html
+fim
+
+função _status(el, classe como texto, mensagem como texto)
+    se el == nulo então
+        retorne
+    fim
+    el.remover_classe("ok")
+    el.remover_classe("erro")
+    el.remover_classe("rodando")
+    se classe != "" então
+        el.adicionar_classe(classe)
+    fim
+    el.texto = mensagem
+fim
+
+função mostrar_rodando(saída, erros, status)
+    saída.texto = ""
+    erros.html = ""
+    _status(status, "rodando", "compilando e executando…")
+fim
+
+# Mostra o resultado de rodar_código() nos elementos de saída, erros e situação.
+função mostrar_resultado(resultado como mapa, saída, erros, status)
+    erros.html = ""
+    se resultado.fase == "rede" então
+        saída.texto = ""
+        erros.html = "<div class=\"erro-cartao\"><p class=\"erro-msg\">" + escapar_html(resultado.mensagem) + "</p></div>"
+        _status(status, "erro", "sem conexão")
+        retorne
+    fim
+    se resultado.fase == "compilação" então
+        saída.texto = ""
+        defina html como ""
+        para cada diag em resultado.erros faça
+            html += cartão_de_erro(diag, diag.tipo)
+        fim
+        erros.html = html + _avisos(resultado.avisos)
+        defina quantos como tamanho(resultado.erros)
+        _status(status, "erro", se quantos == 1 então "1 erro de compilação" senão "{quantos} erros de compilação")
+        retorne
+    fim
+    saída.texto = se resultado.saída == "" e resultado.erro == nulo então "(o programa não mostrou nada)" senão resultado.saída
+    defina ms como arredondar(resultado.tempo * 1000)
+    se resultado.erro != nulo então
+        erros.html = cartão_de_erro(resultado.erro, se resultado.interrompido então "tempo esgotado" senão "erro de execução") + _avisos(resultado.avisos)
+        _status(status, "erro", se resultado.interrompido então "interrompido" senão "erro na execução")
+    senão
+        erros.html = _avisos(resultado.avisos)
+        _status(status, "ok", "✔ executado em {ms} ms")
+    fim
+fim

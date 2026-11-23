@@ -1,0 +1,21 @@
+# título: Adivinhe o número
+# emoji: 🔮
+# descrição: O computador sorteia um número de 1 a 1000 e descobre qual é em no máximo 10 palpites (busca binária).
+defina secreto como aleatório_entre(1, 1000)
+defina menor como 1
+defina maior como 1000
+defina tentativas como 0
+enquanto verdadeiro faça
+    defina palpite como (menor + maior) // 2
+    tentativas += 1
+    se palpite == secreto então
+        mostre "🎯 É {palpite}! Acertei em {tentativas} tentativa(s)."
+        pare
+    senão se palpite < secreto então
+        mostre "{palpite}? Mais alto…"
+        menor = palpite + 1
+    senão
+        mostre "{palpite}? Mais baixo…"
+        maior = palpite - 1
+    fim
+fim
