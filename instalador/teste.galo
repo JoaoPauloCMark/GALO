@@ -1,0 +1,31 @@
+# Verificação rápida de uma instalação da GALO: usada nos testes dos instaladores, em cada sistema.
+#   galo executar instalador/teste.galo
+
+defina total como 0
+
+função confere(condição como booleano, descrição como texto)
+    afirmar(condição, "falhou: " + descrição)
+    total += 1
+fim
+
+confere(2 ^ 100 == 1267650600228229401496703205376, "inteiros sem limite")
+confere(formatar(seno(1e22), 4) == "-0.8522" e logaritmo(1000, 10) == 3.0, "matemática")
+confere(maiúsculas("ação") == "AÇÃO" e tamanho("🐓") == 1, "texto Unicode")
+confere(de_json(para_json({"a": [1, 2.5, "ç"]})).a == [1, 2.5, "ç"], "JSON")
+
+defina banco como abrir_banco(":memória:")
+banco.executar("CREATE TABLE t (nome TEXT)")
+banco.inserir("INSERT INTO t (nome) VALUES (?)", ["Ana"])
+confere(banco.consultar_um("SELECT nome FROM t").nome == "Ana", "banco SQLite")
+
+defina app como criar_servidor()
+app.get("/oi/<nome>", função(pedido) retorne {"oi": pedido.parâmetros.nome} fim)
+confere(app.testar("GET", "/oi/Bia").json.oi == "Bia", "servidor web")
+confere(app.testar("GET", "/_galo/galo.js").status == 200, "VM do navegador (galo.js)")
+confere(modelo('<b>{{ x }}</b>', {"x": "<i>"}) == "<b>&lt;i&gt;</b>", "modelos HTML")
+
+confere(verificar_senha("galo", hash_senha("galo")) e tamanho(uuid()) == 36, "segurança")
+confere(compilar_programa("mostre 1").ok e não compilar_programa("mostre x").ok, "compilador")
+confere(data_hora_iso() != "" e tempo() > 0, "data e hora")
+
+mostre "✔ GALO funcionando: {total} verificações."

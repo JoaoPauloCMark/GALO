@@ -70,7 +70,23 @@ fim)
 
 ## Instalação
 
-A GALO precisa apenas do **Python 3.10 ou mais recente** (testada com 3.13) e não tem dependências.
+**Com o instalador (recomendado)** — não precisa de Python nem do repositório. Baixe o do seu
+sistema em [Releases](https://github.com/JoaoPauloCMark/GALO/releases/latest) e dê dois cliques:
+
+| Sistema | Instalador |
+|---------|------------|
+| Windows 10 e 11 | [GALO-Instalador-Windows.exe](https://github.com/JoaoPauloCMark/GALO/releases/latest/download/GALO-Instalador-Windows.exe) |
+| macOS (M1, M2, M3…) | [GALO-Instalador-macOS-AppleSilicon.pkg](https://github.com/JoaoPauloCMark/GALO/releases/latest/download/GALO-Instalador-macOS-AppleSilicon.pkg) |
+| macOS (Intel) | [GALO-Instalador-macOS-Intel.pkg](https://github.com/JoaoPauloCMark/GALO/releases/latest/download/GALO-Instalador-macOS-Intel.pkg) |
+| Ubuntu, Debian, Mint… | [galo-linux-amd64.deb](https://github.com/JoaoPauloCMark/GALO/releases/latest/download/galo-linux-amd64.deb) |
+| Qualquer Linux (sem root) | [galo-linux-x64.tar.gz](https://github.com/JoaoPauloCMark/GALO/releases/latest/download/galo-linux-x64.tar.gz) → `sh instalar.sh` |
+
+O instalador coloca o comando `galo` no PATH, faz o sistema reconhecer os arquivos `.galo` e
+instala a extensão no VS Code, Cursor ou VSCodium (para um editor instalado depois: `galo extensao`).
+Detalhes em [instalador/README.md](instalador/README.md).
+
+**A partir do código-fonte**, a GALO precisa apenas do **Python 3.10 ou mais recente** (testada com
+3.13) e não tem dependências.
 
 **Baixe** o [ZIP do projeto](https://github.com/JoaoPauloCMark/GALO/archive/refs/heads/main.zip) e
 descompacte (a pasta se chama `GALO-main`), ou clone com Git:
@@ -108,6 +124,8 @@ galo rodar programa.galoc [argumentos...]     # executa o bytecode, sem precisar
 galo verificar programa.galo [--json]         # procura erros sem executar
 galo repl                                     # modo interativo
 galo desmontar programa.galo                  # mostra o bytecode gerado
+galo abrir programa.galo                      # executa e espera Enter no fim (duplo clique no arquivo)
+galo extensao                                 # instala a extensão no VS Code, Cursor, VSCodium...
 galo --versao
 galo ajuda
 ```

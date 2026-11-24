@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Tipos de arquivo da GALO para o Linux (shared-mime-info): ícone e "Abrir com GALO". -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="text/x-galo">
+    <comment>GALO program</comment>
+    <comment xml:lang="pt_BR">Programa GALO</comment>
+    <comment xml:lang="pt">Programa GALO</comment>
+    <sub-class-of type="text/plain"/>
+    <glob pattern="*.galo"/>
+  </mime-type>
+  <mime-type type="application/x-galo-bytecode">
+    <comment>Compiled GALO program</comment>
+    <comment xml:lang="pt_BR">Programa GALO compilado</comment>
+    <comment xml:lang="pt">Programa GALO compilado</comment>
+    <glob pattern="*.galoc"/>
+  </mime-type>
+</mime-info>

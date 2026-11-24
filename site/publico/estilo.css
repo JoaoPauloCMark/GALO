@@ -276,6 +276,15 @@ pre.codigo { margin: 0; padding: 20px 22px; font-size: .93rem; line-height: 1.7;
 .copiar:hover { background: rgba(255, 255, 255, .18); color: #fff; }
 .copiar svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .copiar.copiado { background: rgba(34, 197, 94, .2); color: #86efac; }
+.downloads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 980px; margin: 0 auto 18px; }
+.download { text-align: center; padding: 26px 24px 22px; }
+.download .icone-so { font-size: 2.2rem; line-height: 1; margin-bottom: 10px; }
+.download h3 { margin-bottom: 2px; }
+.download p { color: var(--tinta-2); margin: 0 0 14px; }
+.download .botao { width: 100%; }
+.download .alternativas { font-size: .88rem; margin: 12px 0 0; }
+.nota-centro { max-width: 760px; margin: 0 auto 44px; text-align: center; font-size: .9rem; color: var(--tinta-3); }
+.passos + .nota-centro { margin: 32px auto 0; }
 .acoes-centro { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
 .comando { display: block; background: var(--codigo-fundo); color: #fef3c7; padding: 12px 16px; border-radius: 12px; font-size: .9rem; overflow-x: auto; white-space: pre; }
 .comando .prompt { color: #fb923c; user-select: none; }
@@ -427,7 +436,7 @@ pre.codigo { margin: 0; padding: 20px 22px; font-size: .93rem; line-height: 1.7;
     background: var(--fundo); padding: 12px 20px 20px; border-bottom: 1px solid var(--borda); box-shadow: var(--sombra);
   }
   .menu.aberto { display: flex; }
-  .recursos, .passos, .grade-3, .grade-kpis, .faixa-numeros, .mini-kpis { grid-template-columns: 1fr; }
+  .recursos, .passos, .grade-3, .grade-kpis, .faixa-numeros, .mini-kpis, .downloads { grid-template-columns: 1fr; }
   .secao { padding: 64px 0; }
   .faixa-site { padding: 26px; }
   .editor { height: 52vh; }

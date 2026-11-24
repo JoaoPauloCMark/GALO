@@ -36,6 +36,8 @@ Uso:
   galo tokens <arquivo.galo>                     Mostra os tokens (depuração)
   galo ast <arquivo.galo>                        Mostra a árvore sintática (depuração)
   galo lsp                                       Servidor de linguagem para editores
+  galo extensao                                  Instala a extensão nos editores (VS Code, Cursor...)
+  galo abrir <arquivo.galo>                      Executa e espera Enter no fim (duplo clique)
   galo --versao                                  Mostra a versão
   galo ajuda                                     Mostra esta ajuda
 
@@ -106,7 +108,7 @@ def _print_compilation_error(exc: CompilationError, source: str) -> None:
     sys.stderr.write(f"{n} erro{'s' if n != 1 else ''} encontrado{'s' if n != 1 else ''}. O programa não foi executado.\n")
 
 
-PASSTHROUGH_COMMANDS = {"executar", "rodar"}
+PASSTHROUGH_COMMANDS = {"executar", "rodar", "abrir"}
 
 
 def _parse_options(args: list[str], passthrough: bool) -> tuple[list[str], dict]:
@@ -334,6 +336,30 @@ def cmd_lsp(args: list[str], opts: dict) -> int:
     return serve()
 
 
+def cmd_extensao(args: list[str], opts: dict) -> int:
+    from ..editores import instalar_extensao
+
+    return instalar_extensao(args)
+
+
+def cmd_abrir(args: list[str], opts: dict) -> int:
+    """Executa o programa e, no fim, espera o Enter: é o que roda ao abrir um .galo com dois
+    cliques, para a janela não sumir antes de a pessoa ler a saída."""
+    try:
+        codigo = cmd_executar(args, opts)
+    except (GaloFileError, GaloBytecodeError) as err:
+        print_diagnostic(err)
+        codigo = EXIT_FILE_ERROR
+    sys.stdout.flush()
+    if sys.stdin is not None and sys.stdin.isatty():
+        aviso = "Programa terminado." if codigo == EXIT_OK else "O programa terminou com erro."
+        try:
+            input(f"\n{aviso} Pressione Enter para fechar...")
+        except (EOFError, KeyboardInterrupt):
+            pass
+    return codigo
+
+
 COMMANDS = {
     "executar": cmd_executar,
     "compilar": cmd_compilar,
@@ -344,6 +370,9 @@ COMMANDS = {
     "ast": cmd_ast,
     "repl": cmd_repl,
     "lsp": cmd_lsp,
+    "extensao": cmd_extensao,
+    "extensão": cmd_extensao,
+    "abrir": cmd_abrir,
 }
 
 
@@ -387,7 +416,10 @@ def main(argv: list[str] | None = None) -> int:
         hint = f" Você quis dizer '{close[0]}'?" if close else ""
         return _usage_error(f"comando desconhecido '{cmd}'.{hint}")
     try:
-        args, opts = _parse_options(argv[1:], cmd in PASSTHROUGH_COMMANDS)
+        if cmd in ("extensao", "extensão"):   # opções próprias (--editor), tratadas pelo comando
+            args, opts = argv[1:], {}
+        else:
+            args, opts = _parse_options(argv[1:], cmd in PASSTHROUGH_COMMANDS)
     except ValueError as exc:
         return _usage_error(str(exc))
     try:

@@ -128,3 +128,63 @@ class TestCLI(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestExtensaoEAbrir(unittest.TestCase):
+    """`galo extensao` instala a extensão nos editores; `galo abrir` é o duplo clique num .galo.
+
+    O PATH é isolado: nenhum editor de verdade desta máquina é tocado.
+    """
+
+    def galo(self, *args, path, entrada=None):
+        import subprocess
+        import sys
+        from auxiliar import RAIZ
+
+        env = {"PATH": path, "PYTHONPATH": RAIZ, "GALO_SEM_COR": "1", "PYTHONIOENCODING": "utf-8",
+               "HOME": os.environ.get("HOME", "/tmp")}
+        return subprocess.run([sys.executable, "-m", "galo", *args], env=env, input=entrada,
+                              capture_output=True, text=True, encoding="utf-8", timeout=120)
+
+    def test_extensao_com_editor(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            registro = os.path.join(pasta, "chamada.txt")
+            editor = os.path.join(pasta, "code")
+            with open(editor, "w") as f:
+                f.write(f'#!/bin/sh\nprintf "%s\\n" "$@" > "{registro}"\n')
+            os.chmod(editor, 0o755)
+            r = self.galo("extensao", path=pasta)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertIn("✔ Extensão da GALO instalada no VS Code.", r.stdout)
+            with open(registro) as f:
+                chamada = f.read().splitlines()
+            self.assertEqual(chamada[0], "--install-extension")
+            self.assertTrue(chamada[1].endswith(".vsix"))
+            self.assertEqual(chamada[2], "--force")
+            r = self.galo("extensão", "--editor", editor, path=pasta)   # com acento e editor escolhido
+            self.assertIn("instalada no code", r.stdout)
+
+    def test_extensao_sem_editor_e_editor_com_falha(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            r = self.galo("extensao", path=pasta)
+            self.assertEqual(r.returncode, 0)
+            self.assertIn("Nenhum editor compatível encontrado", r.stdout)
+            quebrado = os.path.join(pasta, "cursor")
+            with open(quebrado, "w") as f:
+                f.write('#!/bin/sh\necho "sem permissão" >&2\nexit 1\n')
+            os.chmod(quebrado, 0o755)
+            r = self.galo("extensao", path=pasta)
+            self.assertEqual(r.returncode, 1)
+            self.assertIn("✘ Não foi possível instalar no Cursor: sem permissão", r.stdout)
+            self.assertEqual(self.galo("extensao", "--outra", path=pasta).returncode, 64)
+
+    def test_abrir(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            programa = os.path.join(pasta, "ola.galo")
+            with open(programa, "w", encoding="utf-8") as f:
+                f.write('defina n como leia("Nome? ")\nmostre "Oi, {n}!"\n')
+            r = self.galo("abrir", programa, path=pasta, entrada="Ana\n")
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("Oi, Ana!", r.stdout)
+            r = self.galo("abrir", os.path.join(pasta, "nao_existe.galo"), path=pasta, entrada="")
+            self.assertNotEqual(r.returncode, 0)

@@ -1,0 +1,235 @@
+# Constrói os instaladores da GALO (Windows, macOS e Linux), instala e testa cada um num sistema
+# de verdade e publica uma Release com eles.
+#
+# A Release é criada sozinha quando a versão em galo/__init__.py ainda não tem uma (v0.2.0,
+# v0.3.0...). Para trocar os arquivos de uma Release que já existe, rode este workflow à mão
+# (Actions → Instaladores → Run workflow) marcando "substituir".
+name: Instaladores
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "galo/**"
+      - "instalador/**"
+      - "vscode-extension/**"
+      - "LICENSE"
+      - ".github/workflows/instaladores.yml"
+  workflow_dispatch:
+    inputs:
+      substituir:
+        description: "Substituir os arquivos da Release desta versão, se ela já existir"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instaladores
+  cancel-in-progress: false
+
+jobs:
+  construir-linux-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: NSIS (gera o .exe do Windows)
+        run: sudo apt-get update && sudo apt-get install -y nsis
+      - name: Construir
+        run: python instalador/construir.py linux-x64 windows-x64
+      - uses: actions/upload-artifact@v7
+        with:
+          name: instaladores-linux-windows
+          path: dist/instaladores/
+          if-no-files-found: error
+
+  construir-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Construir
+        run: python instalador/construir.py macos-arm64 macos-x64
+      - uses: actions/upload-artifact@v7
+        with:
+          name: instaladores-macos
+          path: dist/instaladores/
+          if-no-files-found: error
+
+  testar-linux:
+    needs: construir-linux-windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: instaladores-linux-windows
+          path: instaladores
+      - name: Instalar o .deb
+        run: |
+          sudo apt-get install -y ./instaladores/galo-linux-amd64.deb
+          command -v galo
+          galo --versao
+      - name: Usar a GALO instalada (fora do repositório)
+        run: |
+          cp instalador/teste.galo examples/fibonacci.galo "$RUNNER_TEMP/"
+          cd "$RUNNER_TEMP"
+          galo executar teste.galo
+          galo fibonacci.galo
+          echo 'mostre "duplo clique"' > ola.galo
+          galo abrir ola.galo < /dev/null
+      - name: Arquivos .galo reconhecidos pelo sistema
+        run: |
+          echo 'mostre 1' > "$RUNNER_TEMP/x.galo"
+          tipo="$(xdg-mime query filetype "$RUNNER_TEMP/x.galo" 2>/dev/null || mimetype -b "$RUNNER_TEMP/x.galo" 2>/dev/null || true)"
+          echo "tipo: $tipo"
+          if command -v update-mime-database >/dev/null; then grep -q 'text/x-galo' /usr/share/mime/globs2; fi
+          test -f /usr/share/mime/packages/galo.xml
+          test -f /usr/share/applications/galo.desktop
+      - name: Desinstalar o .deb
+        run: |
+          sudo apt-get remove -y galo
+          test ! -e /opt/galo
+          ! command -v galo
+      - name: Instalar o .tar.gz sem root
+        run: |
+          cd "$RUNNER_TEMP"
+          tar -xzf "$GITHUB_WORKSPACE/instaladores/galo-linux-x64.tar.gz"
+          GALO_SEM_EXTENSAO=1 sh galo-linux-x64/instalar.sh
+          ~/.local/bin/galo executar teste.galo
+          sh galo-linux-x64/instalar.sh --desinstalar
+          test ! -e ~/.local/bin/galo
+
+  testar-windows:
+    needs: construir-linux-windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: instaladores-linux-windows
+          path: instaladores
+      - name: Instalar (modo silencioso, como um usuário comum)
+        run: |
+          Start-Process -Wait -FilePath instaladores\GALO-Instalador-Windows.exe -ArgumentList '/S'
+          $pasta = Join-Path $env:LOCALAPPDATA 'Programs\GALO'
+          Get-ChildItem $pasta | Select-Object Name
+          & "$pasta\galo.cmd" --versao
+          if ($LASTEXITCODE -ne 0) { throw "galo --versao falhou" }
+      - name: Usar a GALO instalada (num terminal novo, pelo PATH)
+        run: |
+          $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+          Copy-Item instalador\teste.galo, examples\fibonacci.galo $env:RUNNER_TEMP
+          Set-Location $env:RUNNER_TEMP
+          galo executar teste.galo
+          if ($LASTEXITCODE -ne 0) { throw "teste.galo falhou" }
+          galo fibonacci.galo
+          if ($LASTEXITCODE -ne 0) { throw "fibonacci.galo falhou" }
+          cmd /c "galo executar teste.galo"
+          if ($LASTEXITCODE -ne 0) { throw "galo pelo Prompt de Comando falhou" }
+      - name: PATH, arquivos .galo e "Aplicativos instalados"
+        run: |
+          $pasta = Join-Path $env:LOCALAPPDATA 'Programs\GALO'
+          $path = (Get-ItemProperty HKCU:\Environment).Path
+          if (-not (($path -split ';') -contains $pasta)) { throw "a pasta não foi para o PATH: $path" }
+          if ((Get-ItemProperty 'HKCU:\Software\Classes\.galo').'(default)' -ne 'GALO.Programa') { throw "associação .galo" }
+          $comando = (Get-ItemProperty 'HKCU:\Software\Classes\GALO.Programa\shell\executar\command').'(default)'
+          Write-Output "duplo clique: $comando"
+          $app = Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\GALO'
+          Write-Output "$($app.DisplayName) — $($app.Publisher) — $($app.EstimatedSize) KB"
+      - name: Desinstalar
+        run: |
+          $pasta = Join-Path $env:LOCALAPPDATA 'Programs\GALO'
+          Start-Process -Wait -FilePath "$pasta\desinstalar.exe" -ArgumentList '/S', "_?=$pasta"
+          if (Test-Path "$pasta\runtime") { throw "a pasta runtime ficou" }
+          if (Test-Path 'HKCU:\Software\Classes\.galo') { throw "a associação .galo ficou" }
+          if (Test-Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\GALO') { throw "ficou em Aplicativos instalados" }
+          $path = (Get-ItemProperty HKCU:\Environment).Path
+          if (($path -split ';') -contains $pasta) { throw "a pasta ficou no PATH" }
+
+  testar-macos:
+    needs: construir-macos
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - maquina: macos-latest
+            pacote: GALO-Instalador-macOS-AppleSilicon.pkg
+          - maquina: macos-15-intel
+            pacote: GALO-Instalador-macOS-Intel.pkg
+    runs-on: ${{ matrix.maquina }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: instaladores-macos
+          path: instaladores
+      - name: Instalar o .pkg
+        run: |
+          sudo installer -pkg "instaladores/${{ matrix.pacote }}" -target /
+          pkgutil --pkgs | grep galo
+          command -v galo
+          galo --versao
+      - name: Usar a GALO instalada (fora do repositório)
+        run: |
+          cp instalador/teste.galo examples/fibonacci.galo "$RUNNER_TEMP/"
+          cd "$RUNNER_TEMP"
+          galo executar teste.galo
+          galo fibonacci.galo
+
+  publicar:
+    needs: [testar-linux, testar-windows, testar-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: instaladores-*
+          path: instaladores
+          merge-multiple: true
+      - name: Criar (ou atualizar) a Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUBSTITUIR: ${{ inputs.substituir }}
+        run: |
+          versao="$(python3 -c 'import re; print(re.search(r"__version__ = \"([^\"]+)\"", open("galo/__init__.py").read()).group(1))')"
+          ls -la instaladores
+          cat > notas.md <<FIM
+          Instaladores da GALO $versao. Escolha o do seu sistema, dê dois cliques e pronto:
+          o comando \`galo\` passa a funcionar em qualquer pasta, os arquivos \`.galo\` ganham ícone
+          e a extensão é instalada no VS Code, Cursor ou VSCodium. Não é preciso ter Python.
+
+          | Sistema | Arquivo |
+          |---------|---------|
+          | Windows 10 e 11 | **GALO-Instalador-Windows.exe** |
+          | macOS com chip M1, M2, M3... | **GALO-Instalador-macOS-AppleSilicon.pkg** |
+          | macOS com Intel | **GALO-Instalador-macOS-Intel.pkg** |
+          | Ubuntu, Debian, Mint... | **galo-linux-amd64.deb** |
+          | Qualquer Linux, sem root | **galo-linux-x64.tar.gz** (descompacte e rode \`sh instalar.sh\`) |
+
+          Os instaladores ainda não têm assinatura digital. No Windows, se aparecer "O Windows protegeu
+          o computador", clique em **Mais informações → Executar assim mesmo**. No macOS, se o
+          instalador for bloqueado, abra **Ajustes do Sistema → Privacidade e Segurança** e clique em
+          **Abrir Mesmo Assim**.
+          FIM
+          if gh release view "v$versao" >/dev/null 2>&1; then
+            if [ "$SUBSTITUIR" = "true" ]; then
+              gh release upload "v$versao" instaladores/* --clobber
+              gh release edit "v$versao" --notes-file notas.md
+            else
+              echo "A Release v$versao já existe: nada a fazer. Mude a versão em galo/__init__.py para publicar outra."
+            fi
+          else
+            gh release create "v$versao" instaladores/* --title "GALO $versao" --notes-file notas.md --target "$GITHUB_SHA"
+          fi

@@ -103,9 +103,12 @@ verificar(tamanho(procurar_todos(r.corpo, "class=\"exemplo ")) == 12, "página i
 verificar("[G201]" em r.corpo e "Você quis dizer" em r.corpo, "página inicial mostra um erro real do compilador")
 verificar(não ("visita" em r.corpo), "nenhuma contagem de visitas")
 verificar("https://github.com/JoaoPauloCMark/GALO/archive/refs/heads/main.zip" em r.corpo, "botão de baixar o GALO")
-verificar("sh instalar.sh" em r.corpo e "python3 -m galo" em r.corpo, "instruções de instalação sem pip")
-verificar(tamanho(procurar_todos(r.corpo, "data-copiar=")) == 5, "os 5 comandos têm botão de copiar")
-verificar(não ("nem Git, nem pip" em r.corpo), "frase retirada da descrição")
+verificar("sh instalar.sh" em r.corpo e "python3 -m galo" em r.corpo, "instruções de instalação")
+verificar(tamanho(procurar_todos(r.corpo, "data-copiar=")) == 4, "os 4 comandos têm botão de copiar")
+para cada instalador em ["GALO-Instalador-Windows.exe", "GALO-Instalador-macOS-AppleSilicon.pkg",
+                         "GALO-Instalador-macOS-Intel.pkg", "galo-linux-amd64.deb", "galo-linux-x64.tar.gz"] faça
+    verificar("/releases/latest/download/" + instalador em r.corpo, "link para o instalador {instalador}")
+fim
 
 r = app.testar("GET", "/experimente")
 verificar(r.status == 200 e "Bem-vindo(a) ao Experimente" em r.corpo e "id=\"aviso-link\" hidden" em r.corpo, "experimente com o programa inicial")

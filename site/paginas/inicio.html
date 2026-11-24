@@ -223,40 +223,64 @@
       <div class="cabecalho-secao">
         <span class="sobretitulo">Comece agora</span>
         <h2>Do zero ao primeiro programa em um minuto</h2>
-        <p>Só precisa do Python 3.10 ou mais novo.</p>
-        <div class="acoes-centro">
-          <a class="botao" href="{{ repositorio }}/archive/refs/heads/main.zip">⬇ Baixar o GALO (.zip)</a>
-          <a class="botao botao-fantasma" href="{{ repositorio }}">Ver o código no GitHub</a>
+        <p>Baixe o instalador do seu sistema. Ele traz tudo o que a GALO precisa — não é preciso ter Python.</p>
+      </div>
+      <div class="downloads">
+        <div class="cartao download">
+          <div class="icone-so">🪟</div>
+          <h3>Windows</h3>
+          <p>Windows 10 e 11</p>
+          <a class="botao" href="{{ repositorio }}/releases/latest/download/GALO-Instalador-Windows.exe">⬇ Baixar (.exe)</a>
+        </div>
+        <div class="cartao download">
+          <div class="icone-so">🍎</div>
+          <h3>macOS</h3>
+          <p>Chip M1, M2, M3…</p>
+          <a class="botao" href="{{ repositorio }}/releases/latest/download/GALO-Instalador-macOS-AppleSilicon.pkg">⬇ Baixar (.pkg)</a>
+          <p class="alternativas">Mac com Intel? <a href="{{ repositorio }}/releases/latest/download/GALO-Instalador-macOS-Intel.pkg">Baixe esta versão</a></p>
+        </div>
+        <div class="cartao download">
+          <div class="icone-so">🐧</div>
+          <h3>Linux</h3>
+          <p>Ubuntu, Debian, Mint…</p>
+          <a class="botao" href="{{ repositorio }}/releases/latest/download/galo-linux-amd64.deb">⬇ Baixar (.deb)</a>
+          <p class="alternativas">Outra distribuição? <a href="{{ repositorio }}/releases/latest/download/galo-linux-x64.tar.gz">Baixe o .tar.gz</a></p>
         </div>
       </div>
+      <p class="nota-centro">Os instaladores ainda não têm assinatura digital. No Windows, se aparecer
+         “O Windows protegeu o computador”, clique em <b>Mais informações → Executar assim mesmo</b>.
+         No macOS, se o instalador for bloqueado, abra <b>Ajustes do Sistema → Privacidade e Segurança</b>
+         e clique em <b>Abrir Mesmo Assim</b>.</p>
       <div class="passos">
         <div class="cartao passo">
-          <h3>Baixe</h3>
-          <p>Baixe o <a href="{{ repositorio }}/archive/refs/heads/main.zip">ZIP</a>, descompacte e abra um
-             terminal na pasta <code>GALO-main</code>. Ou, com Git:</p>
-          <code class="comando" data-copiar="git clone {{ repositorio }}.git"><span class="prompt">$ </span>git clone {{ repositorio }}.git</code>
-        </div>
-        <div class="cartao passo">
           <h3>Instale</h3>
-          <p>Linux e macOS (sem pip):</p>
+          <p>Dê dois cliques no instalador. Ele coloca o comando <code>galo</code> no computador, faz os
+             arquivos <code>.galo</code> serem reconhecidos e instala a extensão no VS Code ou no Cursor.</p>
+          <p class="nota">Baixou o <code>.tar.gz</code>? Descompacte e rode, na pasta:</p>
           <code class="comando" data-copiar="sh instalar.sh"><span class="prompt">$ </span>sh instalar.sh</code>
-          <p>Windows:</p>
-          <code class="comando" data-copiar="py -m pip install ."><span class="prompt">&gt; </span>py -m pip install .</code>
-          <p class="nota">Com pressa? Nem precisa instalar: de dentro da pasta, use <code>python3 -m galo</code>
-             no lugar de <code>galo</code>.</p>
         </div>
         <div class="cartao passo">
           <h3>Escreva</h3>
-          <p>Crie o arquivo <code>ola.galo</code>:</p>
+          <p>Em qualquer pasta, crie o arquivo <code>ola.galo</code>:</p>
           <code class="comando" data-copiar="mostre &quot;Olá, mundo! 🐓&quot;">mostre "Olá, mundo! 🐓"</code>
         </div>
         <div class="cartao passo">
           <h3>Execute</h3>
-          <p>E veja a mágica (que não é mágica):</p>
+          <p>Abra um terminal nessa pasta:</p>
           <code class="comando" data-copiar="galo executar ola.galo"><span class="prompt">$ </span>galo executar ola.galo</code>
-          <p class="nota">Use também <code>galo repl</code> para conversar com a linguagem.</p>
+          <p class="nota">No Windows, dois cliques no arquivo também executam. Use <code>galo repl</code>
+             para conversar com a linguagem.</p>
+        </div>
+        <div class="cartao passo">
+          <h3>Programe no editor</h3>
+          <p>Abra a pasta no VS Code ou no Cursor: os arquivos <code>.galo</code> ganham cores, autocompletar
+             e erros na hora. Instalou o editor depois da GALO? Rode:</p>
+          <code class="comando" data-copiar="galo extensao"><span class="prompt">$ </span>galo extensao</code>
         </div>
       </div>
+      <p class="nota-centro">Prefere o código-fonte? Baixe o <a href="{{ repositorio }}/archive/refs/heads/main.zip">ZIP</a>
+         ou veja o <a href="{{ repositorio }}">projeto no GitHub</a>: de dentro da pasta, <code>python3 -m galo</code>
+         funciona sem instalar nada (aí, sim, com o Python 3.10 ou mais novo).</p>
 
       <div class="faixa-site">
         <div>

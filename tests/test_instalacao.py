@@ -253,5 +253,88 @@ class TestInstalador(unittest.TestCase):
             self.assertIn("galo/web/galo.js", z.namelist())
 
 
+class TestInstaladoresNativos(unittest.TestCase):
+    """instalador/construir.py: pacotes do Linux (e o .exe do Windows, se houver o makensis).
+
+    Baixa o Python portátil uma vez (para instalador/.cache); GALO_SEM_REDE=1 pula.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        if os.environ.get("GALO_SEM_REDE"):
+            raise unittest.SkipTest("GALO_SEM_REDE definido")
+        cls._tmp = tempfile.TemporaryDirectory(prefix="galo-nativos-")
+        cls.saida = os.path.join(cls._tmp.name, "dist")
+        alvos = ["linux-x64"]
+        if shutil.which("makensis") or os.environ.get("MAKENSIS"):
+            alvos.append("windows-x64")
+        r = rodar(sys.executable, os.path.join(RAIZ, "instalador", "construir.py"), *alvos, "--saida", cls.saida)
+        if r.returncode != 0:
+            cls._tmp.cleanup()
+            raise AssertionError(r.stdout + r.stderr)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._tmp.cleanup()
+
+    def test_tar_gz_instala_usa_e_desinstala(self):
+        pasta = self._tmp.name
+        r = rodar("tar", "-xzf", os.path.join(self.saida, "galo-linux-x64.tar.gz"), cwd=pasta)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        casa = os.path.join(pasta, "casa")
+        os.makedirs(casa)
+        env = {"HOME": casa, "PATH": "/usr/bin:/bin", "GALO_SEM_EXTENSAO": "1"}
+        r = subprocess.run(["sh", os.path.join(pasta, "galo-linux-x64", "instalar.sh")], env=env,
+                           capture_output=True, text=True, timeout=300)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("GALO 0.2.0 (bytecode v2, Python 3.13", r.stdout)
+        galo = os.path.join(casa, ".local", "bin", "galo")
+        # fora do repositório, sem PYTHONPATH: a GALO instalada não depende de nada daqui
+        r = rodar(galo, "executar", os.path.join(RAIZ, "instalador", "teste.galo"), cwd=casa)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("GALO funcionando", r.stdout)
+        r = rodar(os.path.join(casa, ".local", "share", "galo", "runtime", "bin", "python3"), "-I", "-c",
+                  "import galo; print(galo.__file__)", cwd=RAIZ, env={"PYTHONPATH": RAIZ})
+        self.assertTrue(r.stdout.startswith(os.path.join(casa, ".local", "share", "galo")), r.stdout)
+        with open(os.path.join(casa, ".local", "share", "mime", "packages", "galo.xml"), encoding="utf-8") as f:
+            self.assertIn('glob pattern="*.galo"', f.read())
+        with open(os.path.join(casa, ".local", "share", "applications", "galo.desktop"), encoding="utf-8") as f:
+            self.assertIn(f"Exec={galo} abrir %f", f.read())
+        r = subprocess.run(["sh", os.path.join(pasta, "galo-linux-x64", "instalar.sh"), "--desinstalar"], env=env,
+                           capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse(os.path.exists(galo))
+        self.assertFalse(os.path.exists(os.path.join(casa, ".local", "share", "galo")))
+
+    @unittest.skipUnless(shutil.which("dpkg-deb"), "dpkg-deb não está disponível")
+    def test_deb(self):
+        deb = os.path.join(self.saida, "galo-linux-amd64.deb")
+        info = rodar("dpkg-deb", "--field", deb, "Package", "Version", "Architecture").stdout
+        self.assertIn("Package: galo", info)
+        self.assertIn("Version: 0.2.0", info)
+        conteudo = rodar("dpkg-deb", "--contents", deb).stdout
+        for caminho in ("./usr/bin/galo", "./opt/galo/galo.vsix", "./usr/share/mime/packages/galo.xml",
+                        "./usr/share/applications/galo.desktop", "/site-packages/galo/__main__.py",
+                        "/site-packages/galo/web/galo.js"):
+            self.assertIn(caminho, conteudo)
+        for ausente in ("/tkinter/", "/idlelib/", "/site-packages/pip", "site/", "/tests/"):
+            self.assertNotIn(ausente, conteudo)
+        with tempfile.TemporaryDirectory() as raiz:
+            self.assertEqual(rodar("dpkg-deb", "-R", deb, raiz).returncode, 0)
+            for script in ("postinst", "postrm"):
+                self.assertEqual(rodar("sh", "-n", os.path.join(raiz, "DEBIAN", script)).returncode, 0)
+            r = rodar(os.path.join(raiz, "opt", "galo", "runtime", "bin", "python3"), "-I", "-m", "galo", "executar",
+                      os.path.join(RAIZ, "instalador", "teste.galo"))
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_exe_do_windows(self):
+        exe = os.path.join(self.saida, "GALO-Instalador-Windows.exe")
+        if not os.path.exists(exe):
+            self.skipTest("makensis (NSIS) não está disponível")
+        with open(exe, "rb") as f:
+            self.assertEqual(f.read(2), b"MZ")   # executável do Windows
+        self.assertGreater(os.path.getsize(exe), 5 * 2**20)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=GALO
+GenericName=Linguagem de programação GALO
+Comment=Executa programas escritos em GALO
+Exec=@GALO@ abrir %f
+Icon=galo
+Terminal=true
+MimeType=text/x-galo;application/x-galo-bytecode;
+NoDisplay=true
+Categories=Development;

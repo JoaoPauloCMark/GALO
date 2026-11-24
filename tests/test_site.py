@@ -249,11 +249,12 @@ class _SiteNoNavegador:
         partes = urlsplit(self.url)
         nav.chamar("Browser.grantPermissions", {"permissions": ["clipboardReadWrite", "clipboardSanitizedWrite"],
                                                 "origin": f"{partes.scheme}://{partes.netloc}"})
-        self.assertEqual(nav.avaliar("document.querySelectorAll('.comando .copiar').length"), 5)
+        self.assertEqual(nav.avaliar("document.querySelectorAll('.comando .copiar').length"), 4)
         for comando in ("sh instalar.sh", 'mostre "Olá, mundo! 🐓"'):
             botao = f".comando[data-copiar='{comando}'] .copiar"
             nav.clicar(botao)
-            nav.esperar(f"document.querySelector({json.dumps(botao)}).classList.contains('copiado')", 5, "o botão confirmar")
+            # no site estático o compilador (Pyodide) pode estar carregando e atrasar a página uns segundos
+            nav.esperar(f"document.querySelector({json.dumps(botao)}).classList.contains('copiado')", 30, "o botão confirmar")
             self.assertEqual(nav.avaliar("navigator.clipboard.readText()"), comando)
         self.assertEqual(nav.mensagens_do_console(), [])
 
