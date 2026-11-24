@@ -2139,6 +2139,29 @@
   nativa('confirmar', 1, 1, (vm, [m]) => { semDocumento('confirmar'); return !!confirm(display(m)); });
   nativa('navegar', 1, 1, (vm, [u]) => { semDocumento('navegar'); global.location.href = exigeTexto('navegar', 1, u); return null; });
   nativa('endereço_atual', 0, 0, () => { semDocumento('endereço_atual'); return String(global.location.href); });
+  // Copia um texto para a área de transferência. Usa a API moderna quando a página é segura
+  // (https ou localhost) e, se ela não existir ou falhar, o método antigo (seleção + copiar).
+  nativa('copiar_texto', 1, 1, (vm, [t]) => {
+    semDocumento('copiar_texto');
+    const texto = display(t);
+    const metodoAntigo = () => {
+      const area = document.createElement('textarea');
+      area.value = texto;
+      area.setAttribute('readonly', '');
+      area.style.cssText = 'position:fixed;top:0;left:-9999px;opacity:0';
+      document.body.appendChild(area);
+      area.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      area.remove();
+      return ok;
+    };
+    if (global.navigator && global.navigator.clipboard && global.isSecureContext) {
+      global.navigator.clipboard.writeText(texto).catch(metodoAntigo);
+      return true;
+    }
+    return metodoAntigo();
+  });
 
   function respostaHTTP(status, corpo, cabecalhos, erroRede) {
     const cab = new Mapa();

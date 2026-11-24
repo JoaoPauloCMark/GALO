@@ -15,6 +15,7 @@ importe carregar_exemplos de "exemplos.galo"
 importe realçar, PALAVRAS_CHAVE, LITERAIS de "compartilhado/realce.galo"
 
 constante VERSÃO como "0.2"
+constante REPOSITÓRIO como "https://github.com/JoaoPauloCMark/GALO"
 constante LIMITE_CÓDIGO como 20000
 
 constante PROGRAMA_INICIAL como '''# Bem-vindo(a) ao Experimente! Edite e clique em ▶ Executar.
@@ -157,7 +158,8 @@ função criar_app(base como texto = "", estatico como booleano = falso)
     função página(título como texto, descrição como texto, script como texto, extras como mapa) retorna mapa
         defina d como {
             "titulo": título, "descricao": descrição, "script": base + script, "versao": VERSÃO,
-            "base": base, "estatico": estatico, "ativo_experimente": "", "ativo_painel": ""
+            "base": base, "estatico": estatico, "repositorio": REPOSITÓRIO,
+            "ativo_experimente": "", "ativo_painel": ""
         }
         para cada chave, valor em extras faça
             d[chave] = valor

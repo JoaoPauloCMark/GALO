@@ -72,10 +72,15 @@ fim)
 
 A GALO precisa apenas do **Python 3.10 ou mais recente** (testada com 3.13) e não tem dependências.
 
+**Baixe** o [ZIP do projeto](https://github.com/JoaoPauloCMark/GALO/archive/refs/heads/main.zip) e
+descompacte (a pasta se chama `GALO-main`), ou clone com Git:
+`git clone https://github.com/JoaoPauloCMark/GALO.git`. Os comandos abaixo rodam de dentro da pasta.
+
 **Linux/macOS, sem pip** (instala em `~/.local/bin/galo`):
 
 ```bash
-./instalar.sh               # instala
+sh instalar.sh              # instala
+./instalar.sh               # (o mesmo, se o arquivo estiver marcado como executável)
 ./instalar.sh --desinstalar # remove
 PREFIXO=/opt/galo ./instalar.sh   # outro destino
 ```

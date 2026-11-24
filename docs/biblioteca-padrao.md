@@ -6,7 +6,7 @@
 Todos os nomes podem ser escritos com ou sem acentos (`maiúsculas` ou `maiusculas`).
 Argumentos entre colchetes são opcionais. Posições de listas e textos começam em 1.
 A instrução `mostre` não é uma função: veja a [especificação](language-spec.md).
-São 125 funções internas e 1 constante(s).
+São 126 funções internas e 1 constante(s).
 Funções marcadas com *(só no servidor)* não existem na VM do navegador; as da seção
 *Página* só existem no navegador. Todo o resto funciona igual nos dois lugares.
 
@@ -501,6 +501,10 @@ Cancela um temporizador criado por depois() ou a_cada(). Só no navegador.
 ### `confirmar(mensagem)` → `booleano`
 
 Pergunta sim/não ao usuário do navegador; devolve verdadeiro se ele confirmar.
+
+### `copiar_texto(texto)` → `booleano`
+
+Copia o texto para a área de transferência (como Ctrl+C), por exemplo num botão "copiar". Devolve verdadeiro se o navegador aceitou copiar. Só no navegador.
 
 ### `criar_elemento(etiqueta, [texto])`
 

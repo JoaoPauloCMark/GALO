@@ -223,25 +223,38 @@
       <div class="cabecalho-secao">
         <span class="sobretitulo">Comece agora</span>
         <h2>Do zero ao primeiro programa em um minuto</h2>
-        <p>Só precisa do Python 3.10 ou mais novo. Nenhuma outra dependência.</p>
+        <p>Só precisa do Python 3.10 ou mais novo.</p>
+        <div class="acoes-centro">
+          <a class="botao" href="{{ repositorio }}/archive/refs/heads/main.zip">⬇ Baixar o GALO (.zip)</a>
+          <a class="botao botao-fantasma" href="{{ repositorio }}">Ver o código no GitHub</a>
+        </div>
       </div>
       <div class="passos">
         <div class="cartao passo">
+          <h3>Baixe</h3>
+          <p>Baixe o <a href="{{ repositorio }}/archive/refs/heads/main.zip">ZIP</a>, descompacte e abra um
+             terminal na pasta <code>GALO-main</code>. Ou, com Git:</p>
+          <code class="comando" data-copiar="git clone {{ repositorio }}.git"><span class="prompt">$ </span>git clone {{ repositorio }}.git</code>
+        </div>
+        <div class="cartao passo">
           <h3>Instale</h3>
-          <p>Na pasta do projeto GALO:</p>
-          <code class="comando"><span class="prompt">$ </span>pip install .</code>
-          <p style="margin-top:10px">ou, sem pip: <code>./instalar.sh</code></p>
+          <p>Linux e macOS (sem pip):</p>
+          <code class="comando" data-copiar="sh instalar.sh"><span class="prompt">$ </span>sh instalar.sh</code>
+          <p>Windows:</p>
+          <code class="comando" data-copiar="py -m pip install ."><span class="prompt">&gt; </span>py -m pip install .</code>
+          <p class="nota">Com pressa? Nem precisa instalar: de dentro da pasta, use <code>python3 -m galo</code>
+             no lugar de <code>galo</code>.</p>
         </div>
         <div class="cartao passo">
           <h3>Escreva</h3>
           <p>Crie o arquivo <code>ola.galo</code>:</p>
-          <code class="comando">mostre "Olá, mundo! 🐓"</code>
+          <code class="comando" data-copiar="mostre &quot;Olá, mundo! 🐓&quot;">mostre "Olá, mundo! 🐓"</code>
         </div>
         <div class="cartao passo">
           <h3>Execute</h3>
           <p>E veja a mágica (que não é mágica):</p>
-          <code class="comando"><span class="prompt">$ </span>galo executar ola.galo</code>
-          <p style="margin-top:10px">Use também <code>galo repl</code> para conversar com a linguagem.</p>
+          <code class="comando" data-copiar="galo executar ola.galo"><span class="prompt">$ </span>galo executar ola.galo</code>
+          <p class="nota">Use também <code>galo repl</code> para conversar com a linguagem.</p>
         </div>
       </div>
 
@@ -250,7 +263,8 @@
           <span class="sobretitulo">Este site é a prova</span>
           <h2>{{ numeros.linhas_site }} linhas de GALO, {{ numeros.arquivos_site }} arquivos</h2>
           <p>O servidor web, o banco de dados, as páginas, o realce de sintaxe, a calculadora, os gráficos
-             e o “Experimente” são programas GALO. Leia o código na pasta <code>site/</code> do projeto.</p>
+             e o “Experimente” são programas GALO. Leia o código na pasta
+             <a href="{{ repositorio }}/tree/main/site"><code>site/</code></a> do projeto.</p>
           <a class="botao" href="{{ base }}/experimente">Escreva o seu →</a>
         </div>
         <ul class="arquivos-site">

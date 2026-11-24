@@ -257,14 +257,26 @@ pre.codigo { margin: 0; padding: 20px 22px; font-size: .93rem; line-height: 1.7;
 .mini-painel .rodape-cartao { padding: 0 22px; display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--tinta-2); font-size: .9rem; }
 
 /* comece agora */
-.passos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: passo; }
-.passo { position: relative; padding: 30px 26px 24px; }
+.passos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px 24px; counter-reset: passo; max-width: 980px; margin: 0 auto; }
+.passo { position: relative; padding: 32px 30px 26px; }
 .passo::before {
   counter-increment: passo; content: counter(passo);
   position: absolute; top: -16px; left: 24px; width: 36px; height: 36px; border-radius: 50%;
   display: grid; place-items: center; font-weight: 900; color: #fff; background: var(--marca); box-shadow: 0 6px 16px -6px rgba(225, 29, 72, .7);
 }
 .passo p { color: var(--tinta-2); }
+.passo .comando { margin-bottom: 12px; font-size: .84rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.passo .nota { font-size: .9rem; margin: 4px 0 0; }
+.comando[data-copiar] { position: relative; padding-right: 52px; }
+.copiar {
+  position: absolute; top: 7px; right: 8px; width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center; border: 0; border-radius: 8px; cursor: pointer;
+  background: rgba(255, 255, 255, .08); color: #d6d3d1; transition: background .15s, color .15s;
+}
+.copiar:hover { background: rgba(255, 255, 255, .18); color: #fff; }
+.copiar svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.copiar.copiado { background: rgba(34, 197, 94, .2); color: #86efac; }
+.acoes-centro { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 22px; }
 .comando { display: block; background: var(--codigo-fundo); color: #fef3c7; padding: 12px 16px; border-radius: 12px; font-size: .9rem; overflow-x: auto; white-space: pre; }
 .comando .prompt { color: #fb923c; user-select: none; }
 

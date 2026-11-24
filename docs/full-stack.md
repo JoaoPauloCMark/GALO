@@ -209,6 +209,7 @@ fim)
 | `depois(ms, f)`, `a_cada(ms, f)`, `cancelar_temporizador(id)` | temporizadores |
 | `armazenar(chave, valor)`, `recuperar(chave, [padrão])`, `esquecer(chave)` | dados que sobrevivem ao recarregar a página |
 | `alerta(m)`, `confirmar(m)`, `navegar(url)`, `endereço_atual()` | interação com o navegador |
+| `copiar_texto(texto)` | copia o texto para a área de transferência (para botões "copiar") |
 
 Um **Elemento** tem as propriedades `texto`, `html`, `valor`, `marcado`, `etiqueta` e `filhos`, e os
 métodos `ao(evento, função)`, `adicionar(filho ou texto)`, `remover()`, `limpar()`, `atributo(nome)`,

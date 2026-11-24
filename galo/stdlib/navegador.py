@@ -95,3 +95,10 @@ def navegar(vm, endereco):
 def endereco_atual(vm):
     """Endereço (URL) da página atual no navegador."""
     _so_no_navegador("endereço_atual")
+
+
+@nativa("copiar_texto", retorna="booleano", assinatura="copiar_texto(texto)")
+def copiar_texto(vm, texto):
+    """Copia o texto para a área de transferência (como Ctrl+C), por exemplo num botão
+    "copiar". Devolve verdadeiro se o navegador aceitou copiar. Só no navegador."""
+    _so_no_navegador("copiar_texto")

@@ -244,6 +244,17 @@ class _SiteNoNavegador:
         # mini painel atualiza sozinho
         hora = self.texto("#mini-hora")
         nav.esperar(f"document.querySelector('#mini-hora').textContent !== {json.dumps(hora)}", 5, "a simulação andar")
+        # botões de copiar os comandos de instalação (copiam sem o "$" do terminal)
+        from urllib.parse import urlsplit
+        partes = urlsplit(self.url)
+        nav.chamar("Browser.grantPermissions", {"permissions": ["clipboardReadWrite", "clipboardSanitizedWrite"],
+                                                "origin": f"{partes.scheme}://{partes.netloc}"})
+        self.assertEqual(nav.avaliar("document.querySelectorAll('.comando .copiar').length"), 5)
+        for comando in ("sh instalar.sh", 'mostre "Olá, mundo! 🐓"'):
+            botao = f".comando[data-copiar='{comando}'] .copiar"
+            nav.clicar(botao)
+            nav.esperar(f"document.querySelector({json.dumps(botao)}).classList.contains('copiado')", 5, "o botão confirmar")
+            self.assertEqual(nav.avaliar("navigator.clipboard.readText()"), comando)
         self.assertEqual(nav.mensagens_do_console(), [])
 
     def test_experimente(self):
@@ -449,6 +460,9 @@ class TestSiteNoWebKit(unittest.TestCase):
                      "descricao": "o exemplo executar"},
                     {"avaliar": "document.querySelector('.exemplo.ativa .console-saida').textContent", "nome": "exemplo"},
                     {"clicar": "#calc-expressao"}, {"tecla": "Escape"}, {"digitar": "7*6"}, {"tecla": "Return"},
+                    # o WebKit entrega os eventos de teclado com um pequeno atraso: espera a conta aparecer
+                    {"esperar": "document.querySelector('#calc-historico').textContent.includes('7 × 6')",
+                     "limite": 10, "descricao": "a conta ir para o histórico"},
                     {"avaliar": "document.querySelector('#calc-resultado').textContent", "nome": "conta"},
                 ])
                 experimente = rodar_webkit(url + "/experimente", [

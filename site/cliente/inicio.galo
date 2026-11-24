@@ -263,6 +263,38 @@ fim)
 
 mostrar_histórico()
 
+# ------------------------------------------------------------------ botões de copiar os comandos
+
+constante ÍCONE_COPIAR como '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>'
+constante ÍCONE_COPIADO como '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
+
+# Cada caixinha com data-copiar ganha um botão que copia o comando (sem o "$" do terminal).
+função preparar_cópia(caixa)
+    defina botão como criar_elemento("button")
+    botão.adicionar_classe("copiar")
+    botão.definir_atributo("type", "button")
+    botão.definir_atributo("title", "Copiar")
+    botão.definir_atributo("aria-label", "Copiar: " + caixa.atributo("data-copiar"))
+    botão.html = ÍCONE_COPIAR
+    botão.ao("clique", função()
+        se copiar_texto(caixa.atributo("data-copiar")) então
+            botão.html = ÍCONE_COPIADO
+            botão.adicionar_classe("copiado")
+            botão.definir_atributo("title", "Copiado!")
+            depois(1600, função()
+                botão.html = ÍCONE_COPIAR
+                botão.remover_classe("copiado")
+                botão.definir_atributo("title", "Copiar")
+            fim)
+        fim
+    fim)
+    caixa.adicionar(botão)
+fim
+
+para cada caixa em elementos("[data-copiar]") faça
+    preparar_cópia(caixa)
+fim
+
 # ------------------------------------------------------------------ mini painel da cafeteria
 
 defina mini como cafeteria.nova_cafeteria(aleatório_entre(1, 1000000))
